@@ -1,19 +1,30 @@
+// src/state-management/auth-store.ts
 import { create } from "zustand";
 
-export type UserData = {
+export interface UserData {
     email: string;
     role: string;
     token: string;
-};
+}
 
-type AuthStore = {
-    user: UserData | null;
-    setUserData: (user: UserData) => void;
-    resetUserData: () => void;
-};
+interface AuthStore {
+    userData: UserData | null;
+    token: string | null;
+    role: string | null;
+    setUserData: (userData: UserData) => void;
+    setAuth: (token: string, role: string) => void;
+    logout: () => void;
+}
 
 export const useAuthStore = create<AuthStore>((set) => ({
-    user: null,
-    setUserData: (user) => set({ user }),
-    resetUserData: () => set({ user: null }),
+    userData: null,
+    token: null,
+    role: null,
+    setUserData: (userData) => set({
+        userData,
+        token: userData.token,
+        role: userData.role,
+    }),
+    setAuth: (token, role) => set({ token, role }),
+    logout: () => set({ userData: null, token: null, role: null }),
 }));

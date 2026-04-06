@@ -1,7 +1,13 @@
 import { useState } from "react";
+import type { FormEvent } from "react";
+import type { AxiosError } from "axios";
 import { useNavigate } from "react-router-dom";
-import { Box, Button, Input, Stack, Text, Alert } from "@chakra-ui/react";
-import { loginUser } from "../../services/auth-service"; // Проверь путь к файлу!
+import { Box, Button, Input, Stack, Text } from "@chakra-ui/react";
+import { loginUser } from "../../services/auth-service";
+
+interface LoginErrorResponse {
+    error?: string;
+}
 
 const LoginPage = () => {
     const [email, setEmail] = useState("");
@@ -9,18 +15,16 @@ const LoginPage = () => {
     const [error, setError] = useState("");
     const navigate = useNavigate();
 
-    const handleLogin = async (e: React.FormEvent) => {
+    const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        setError(""); // Очищаем старые ошибки
+        setError("");
 
         try {
-            // Пытаемся залогиниться
             await loginUser({ email, password });
-            // Если всё ок, перекидываем юзера на страницу с альбомами
             navigate("/albums");
-        } catch (err: any) {
-            // Если охранник не пустил — показываем ошибку
-            setError(err.response?.data?.error || "Ошибка при входе");
+        } catch (err) {
+            const loginError = err as AxiosError<LoginErrorResponse>;
+            setError(loginError.response?.data?.error ?? "Ошибка при входе");
         }
     };
 
@@ -45,8 +49,6 @@ const LoginPage = () => {
                         onChange={(e) => setPassword(e.target.value)}
                         required
                     />
-
-                    {/* Показываем ошибку, если она есть */}
                     {error && (
                         <Text color="red.500" fontSize="sm">{error}</Text>
                     )}

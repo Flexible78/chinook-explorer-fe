@@ -12,8 +12,8 @@ export const loginUser = async (credentials: LoginCredentials) => {
 
     const userData: UserData = {
         email: credentials.email,
-        role: role,
-        token: token,
+        role,
+        token,
     };
 
     useAuthStore.getState().setUserData(userData);
