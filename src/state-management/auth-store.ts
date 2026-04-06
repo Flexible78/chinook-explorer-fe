@@ -12,7 +12,6 @@ type AuthStore = {
     resetUserData: () => void;
 };
 
-// Вот она, та самая строчка, которую искал сервер: export const useAuthStore
 export const useAuthStore = create<AuthStore>((set) => ({
     user: null,
     setUserData: (user) => set({ user }),
