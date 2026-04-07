@@ -1,9 +1,9 @@
-// src/components/pages/CustomersPage.tsx
 import { useEffect, useState } from "react";
 import { Box, Table, Spinner, Center, Heading, Button, Flex } from "@chakra-ui/react";
 import { fetchCustomers, type Customer } from "../../services/customers-service.js";
 import { useAuthStore } from "../../state-management/auth-store.js";
 import SalesAgentModal from "./SalesAgentModal.js";
+import CustomerInvoicesModal from "./CustomerInvoicesModal.js";
 import { Navigate } from "react-router-dom";
 
 const CustomersPage = () => {
@@ -11,20 +11,26 @@ const CustomersPage = () => {
     const [customers, setCustomers] = useState<Customer[]>([]);
     const [loading, setLoading] = useState(true);
 
-    // ✅ ИСПРАВЛЕНИЕ 1: Хук теперь живет ВНУТРИ компонента
     const [selectedCustomerForAgent, setSelectedCustomerForAgent] = useState<number | null>(null);
+    const [selectedCustomerForInvoices, setSelectedCustomerForInvoices] = useState<number | null>(null);
 
     useEffect(() => {
+        console.log("[CustomersPage] 🟢 Loading customers list...");
         fetchCustomers()
-            .then(data => { setCustomers(data); setLoading(false); })
-            .catch(() => setLoading(false));
+            .then(data => {
+                setCustomers(data);
+                setLoading(false);
+                console.log(`[CustomersPage] ✅ Loaded ${data.length} customers`);
+            })
+            .catch((err) => {
+                console.error("[CustomersPage] ❌ Failed to load customers:", err);
+                setLoading(false);
+            });
     }, []);
-    // 🛑 ОХРАНА: Пускаем только SALE и SUPER_USER
+
     if (role !== "SALE" && role !== "SUPER_USER") {
         return <Navigate to="/albums" replace />;
     }
-
-
 
     if (loading) return <Center h="100vh"><Spinner size="xl" color="blue.500" /></Center>;
 
@@ -38,43 +44,55 @@ const CustomersPage = () => {
                         <Table.ColumnHeader>Name</Table.ColumnHeader>
                         <Table.ColumnHeader>Location</Table.ColumnHeader>
                         <Table.ColumnHeader>Email</Table.ColumnHeader>
-                        <Table.ColumnHeader textAlign="right">Actions</Table.ColumnHeader>
+                        <Table.ColumnHeader textAlign="right"></Table.ColumnHeader>
                     </Table.Row>
                 </Table.Header>
                 <Table.Body>
-                    {customers.map((c) => (
-                        <Table.Row key={c.id || Math.random()}>
-                            <Table.Cell fontWeight="bold">{c.firstName} {c.lastName}</Table.Cell>
-                            <Table.Cell>{c.city}, {c.country}</Table.Cell>
-                            <Table.Cell color="gray.500">{c.email}</Table.Cell>
-                            <Table.Cell textAlign="right">
-                                <Flex gap="2" justify="flex-end">
-                                    {/* Кнопку Invoices оживим позже */}
-                                    <Button size="sm" colorPalette="green" variant="outline">
-                                        Invoices
-                                    </Button>
+                    {customers.map((c) => {
+                        const correctId = c.id || (c as any).customerId || (c as any).customer_id || null;
+                        return (
+                            <Table.Row key={correctId || Math.random()}>
+                                <Table.Cell fontWeight="bold">{c.firstName} {c.lastName}</Table.Cell>
+                                <Table.Cell>{c.city}, {c.country}</Table.Cell>
+                                <Table.Cell color="gray.500">{c.email}</Table.Cell>
+                                <Table.Cell textAlign="right">
+                                    <Flex gap="2" justify="flex-end">
+                                        <Button
+                                            size="sm"
+                                            colorPalette="green"
+                                            variant="outline"
+                                            onClick={() => {
+                                                console.log(`[CustomersPage] 🖱 Open Invoices for ID: ${correctId}`);
+                                                setSelectedCustomerForInvoices(correctId);
+                                            }}
+                                        >
+                                            Invoices
+                                        </Button>
 
-                                    {/* ✅ ИСПРАВЛЕНИЕ 2: Добавили onClick, который передает ID клиента */}
-                                    <Button
-                                        size="sm"
-                                        colorPalette="cyan"
-                                        variant="outline"
-                                        onClick={() => {
-                                            // Берем ID, как бы он ни назывался в твоей базе!
-                                            const correctId = c.id || c.customerId || c.customer_id || null;
-                                            setSelectedCustomerForAgent(correctId);
-                                        }}
-                                    >
-                                        Sales Agent
-                                    </Button>
-                                </Flex>
-                            </Table.Cell>
-                        </Table.Row>
-                    ))}
+                                        <Button
+                                            size="sm"
+                                            colorPalette="cyan"
+                                            variant="outline"
+                                            onClick={() => {
+                                                console.log(`[CustomersPage] 🖱 Open Sales Agent for ID: ${correctId}`);
+                                                setSelectedCustomerForAgent(correctId);
+                                            }}
+                                        >
+                                            Sales Agent
+                                        </Button>
+                                    </Flex>
+                                </Table.Cell>
+                            </Table.Row>
+                        );
+                    })}
                 </Table.Body>
             </Table.Root>
 
-            {/* ✅ ИСПРАВЛЕНИЕ 3: Выводим саму модалку в самом низу страницы */}
+            <CustomerInvoicesModal
+                customerId={selectedCustomerForInvoices}
+                onClose={() => setSelectedCustomerForInvoices(null)}
+            />
+
             <SalesAgentModal
                 customerId={selectedCustomerForAgent}
                 onClose={() => setSelectedCustomerForAgent(null)}
