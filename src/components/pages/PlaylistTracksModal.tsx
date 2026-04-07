@@ -1,7 +1,8 @@
+// src/components/pages/PlaylistTracksModal.tsx
 import { useEffect, useState } from "react";
 import { Button, Center, Dialog, Spinner, Table } from "@chakra-ui/react";
 import { fetchPlaylistTracks, type Playlist } from "../../services/playlists-service.js";
-import type { Track } from "../../services/albums-service.js"; // Берем тип из альбомов
+import type { Track } from "../../services/albums-service.js";
 
 interface Props {
     playlist: Playlist | null;
@@ -23,17 +24,17 @@ const PlaylistTracksModal = ({ playlist, onClose }: Props) => {
     }, [playlist]);
 
     return (
-        <Dialog.Root open={!!playlist} onOpenChange={onClose}>
+        <Dialog.Root open={!!playlist} onOpenChange={(details) => { if (!details.open) onClose(); }}>
             <Dialog.Backdrop />
             <Dialog.Positioner>
-                <Dialog.Content p="6" bg="gray.900" border="1px solid" borderColor="purple.500">
+                <Dialog.Content p="6" bg="gray.900" border="1px solid" borderColor="purple.500" position="relative">
                     <Dialog.Header>
-                        <Dialog.Title fontSize="xl" color="purple.300">
+                        <Dialog.Title fontSize="xl" color="purple.300" pr="8">
                             Playlist: {playlist?.name}
                         </Dialog.Title>
                     </Dialog.Header>
 
-                    <Dialog.Body>
+                    <Dialog.Body pb="4">
                         {loading ? (
                             <Center py="10"><Spinner color="purple.500" /></Center>
                         ) : (
@@ -53,11 +54,12 @@ const PlaylistTracksModal = ({ playlist, onClose }: Props) => {
                         )}
                     </Dialog.Body>
 
-                    <Dialog.Footer>
-                        <Dialog.ActionTrigger asChild>
-                            <Button variant="ghost" onClick={onClose}>Close</Button>
-                        </Dialog.ActionTrigger>
-                    </Dialog.Footer>
+                    {/* Крестик в правом верхнем углу */}
+                    <Dialog.CloseTrigger asChild position="absolute" top="2" right="2">
+                        <Button variant="ghost" size="sm" px="2" color="gray.400" _hover={{ color: "white", bg: "red.500" }}>
+                            ✕
+                        </Button>
+                    </Dialog.CloseTrigger>
                 </Dialog.Content>
             </Dialog.Positioner>
         </Dialog.Root>
