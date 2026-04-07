@@ -11,3 +11,14 @@ export const fetchAlbums = async (): Promise<Album[]> => {
     const response = await apiClient.get("/albums");
     return response.data;
 };
+export interface Track {
+    trackName: string;
+    genreName: string;
+    mediaTypeName: string;
+}
+
+export const fetchTracks = async (albumId: number): Promise<Track[]> => {
+    // Стучимся по ID альбома, который нам прислал бэкенд
+    const response = await apiClient.get(`/albums/${albumId}/tracks`);
+    return response.data;
+};
