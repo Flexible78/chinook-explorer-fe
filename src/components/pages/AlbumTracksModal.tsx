@@ -19,7 +19,7 @@ const AlbumTracksModal = ({ album, onClose }: Props) => {
             .then(setTracks)
             .catch(console.error)
             .finally(() => setLoading(false));
-    }, [album]); // Загружаем песни каждый раз, когда меняется альбом
+    }, [album]); // Reload tracks whenever the selected album changes.
 
     return (
         <Dialog.Root open={!!album} onOpenChange={onClose}>

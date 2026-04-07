@@ -23,7 +23,7 @@ const LoginPage = () => {
         try {
             await loginUser({ email, password });
 
-            // Умный редирект по роли
+            // Route users to the correct landing page for their role.
             const role = useAuthStore.getState().role;
             if (role === "SALE") {
                 navigate("/customers");
@@ -32,27 +32,27 @@ const LoginPage = () => {
             }
         } catch (err) {
             const loginError = err as AxiosError<LoginErrorResponse>;
-            setError(loginError.response?.data?.error ?? "Ошибка при входе");
+            setError(loginError.response?.data?.error ?? "Login failed");
         }
     };
 
     return (
         <Box maxW="sm" mx="auto" mt="20vh" p="6" borderWidth="1px" borderRadius="md" boxShadow="md">
             <Text fontSize="2xl" fontWeight="bold" textAlign="center" mb="6">
-                Вход в Chinook 🎸
+                Sign in to Chinook 🎸
             </Text>
 
             <form onSubmit={handleLogin}>
                 <Stack gap="4">
                     <Input
-                        placeholder="Email (например: user@test.com)"
+                        placeholder="Email (for example: user@test.com)"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
                     />
                     <Input
                         type="password"
-                        placeholder="Пароль (123)"
+                        placeholder="Password (123)"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
@@ -62,7 +62,7 @@ const LoginPage = () => {
                     )}
 
                     <Button type="submit" colorPalette="blue" width="full">
-                        Войти
+                        Sign in
                     </Button>
                 </Stack>
             </form>

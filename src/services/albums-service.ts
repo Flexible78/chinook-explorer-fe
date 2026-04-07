@@ -7,7 +7,7 @@ export interface Album {
 }
 
 export const fetchAlbums = async (): Promise<Album[]> => {
-    // Наш apiClient сам подставит токен из Zustand
+    // The shared API client injects the auth token from Zustand.
     const response = await apiClient.get("/albums");
     return response.data;
 };
@@ -18,7 +18,7 @@ export interface Track {
 }
 
 export const fetchTracks = async (albumId: number): Promise<Track[]> => {
-    // Стучимся по ID альбома, который нам прислал бэкенд
+    // Load tracks for the selected album id from the backend.
     const response = await apiClient.get(`/albums/${albumId}/tracks`);
     return response.data;
 };

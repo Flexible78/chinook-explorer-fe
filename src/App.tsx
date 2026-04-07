@@ -11,7 +11,7 @@ function App() {
             <Routes>
                 <Route path="/login" element={<LoginPage />} />
 
-                {/* Все роуты внутри этого блока будут требовать логин */}
+                {/* All routes inside this block require authentication */}
                 <Route element={<ProtectedRoute />}>
                     <Route path="/albums" element={<AlbumsPage />} />
                     <Route path="/playlists" element={<PlaylistsPage />} />

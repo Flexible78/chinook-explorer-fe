@@ -54,7 +54,7 @@ const PlaylistTracksModal = ({ playlist, onClose }: Props) => {
                         )}
                     </Dialog.Body>
 
-                    {/* Крестик в правом верхнем углу */}
+                    {/* Close button in the top-right corner */}
                     <Dialog.CloseTrigger asChild position="absolute" top="2" right="2">
                         <Button variant="ghost" size="sm" px="2" color="gray.400" _hover={{ color: "white", bg: "red.500" }}>
                             ✕

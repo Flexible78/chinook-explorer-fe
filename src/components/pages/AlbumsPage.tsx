@@ -20,10 +20,10 @@ const AlbumsPage = () => {
             .catch(() => setLoading(false));
     }, []);
 
-    // Охрана: продавцам тут делать нечего
+    // Sales users are not allowed on media pages.
     if (role !== "USER" && role !== "SUPER_USER") return <Navigate to="/customers" replace />;
 
-    // Логика сортировки
+    // Apply client-side column sorting.
     const sortedAlbums = useMemo(() => {
         if (!sortConfig) return albums;
         return [...albums].sort((a, b) => {

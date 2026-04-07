@@ -1,6 +1,6 @@
 // src/state-management/auth-store.ts
 import { create } from "zustand";
-import { persist } from "zustand/middleware"; // 1. Импортируем магию памяти
+import { persist } from "zustand/middleware";
 
 export interface UserData {
     email: string;
@@ -16,7 +16,7 @@ interface AuthStore {
     logout: () => void;
 }
 
-// 2. Оборачиваем весь стор в persist(...)
+// Persist auth state so the session survives page refreshes.
 export const useAuthStore = create<AuthStore>()(
     persist(
         (set) => ({
@@ -30,11 +30,11 @@ export const useAuthStore = create<AuthStore>()(
             }),
             logout: () => {
                 set({ userData: null, token: null, role: null });
-                localStorage.removeItem("auth-storage"); // На всякий случай чистим руками
+                localStorage.removeItem("auth-storage");
             },
         }),
         {
-            name: "auth-storage", // Имя ключа в браузере
+            name: "auth-storage",
         }
     )
 );

@@ -2,8 +2,8 @@ import { apiClient } from "./api-client.js";
 import type { Track } from "./albums-service.js";
 export interface Customer {
     id?: number;
-    customerId?: number;  // Добавили, чтобы TS перестал ругаться
-    customer_id?: number; // Добавили, чтобы TS перестал ругаться
+    customerId?: number;
+    customer_id?: number;
     firstName: string;
     lastName: string;
     city: string;
@@ -15,7 +15,6 @@ export const fetchCustomers = async (): Promise<Customer[]> => {
     const response = await apiClient.get("/customers");
     return response.data;
 };
-// Добавь это в конец файла src/services/customers-service.ts
 
 export interface SalesAgent {
     firstName: string;
@@ -27,14 +26,12 @@ export interface SalesAgent {
     email: string;
 }
 
-// ВНИМАНИЕ: Проверь, какой у тебя точный путь на бэкенде!
-// Обычно это что-то вроде /customers/:id/agent или /employees/:id
 export const fetchSalesAgent = async (customerId: number): Promise<SalesAgent> => {
     const response = await apiClient.get(`/customers/${customerId}/agent`);
     return response.data;
 };
 export interface Invoice {
-    invoiceId: number; // или id, в зависимости от бэкенда
+    invoiceId: number;
     invoiceDate: string;
     total: number;
 }
@@ -46,15 +43,14 @@ export interface InvoiceTrack extends Track {
     unit_price?: number;
 }
 
-// Запрос счетов клиента
+// Load invoices for a given customer.
 export const fetchCustomerInvoices = async (customerId: number): Promise<Invoice[]> => {
     const response = await apiClient.get(`/customers/${customerId}/invoices`);
     return response.data;
 };
 
-// Запрос треков конкретного счета
+// Load tracks for a given invoice.
 export const fetchInvoiceTracks = async (invoiceId: number): Promise<InvoiceTrack[]> => {
-    // Внимание: проверь, что роут на бэкенде называется именно так!
     const response = await apiClient.get(`/invoices/${invoiceId}/tracks`);
     return response.data;
 };

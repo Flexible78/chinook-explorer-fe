@@ -1,15 +1,22 @@
 import { useEffect, useState } from "react";
 import { Center, Dialog, Spinner, Table, Button } from "@chakra-ui/react";
 import { fetchInvoiceTracks } from "../../services/customers-service.js";
-import type { InvoiceTrack } from "../../services/customers-service.js";
+import type { Track } from "../../services/albums-service.js";
 
 interface Props {
     invoiceId: number | null;
     onClose: () => void;
 }
 
+type InvoiceTrackRow = Track & {
+    name?: string;
+    genre_name?: string;
+    unitPrice?: number;
+    unit_price?: number;
+};
+
 const InvoiceTracksModal = ({ invoiceId, onClose }: Props) => {
-    const [tracks, setTracks] = useState<InvoiceTrack[]>([]);
+    const [tracks, setTracks] = useState<InvoiceTrackRow[]>([]);
     const [loadedInvoiceId, setLoadedInvoiceId] = useState<number | null>(null);
 
     useEffect(() => {
@@ -26,7 +33,7 @@ const InvoiceTracksModal = ({ invoiceId, onClose }: Props) => {
                     return;
                 }
 
-                setTracks(data);
+                setTracks(data as InvoiceTrackRow[]);
                 setLoadedInvoiceId(invoiceId);
                 console.log(`[InvoiceTracksModal] ✅ Loaded ${data.length} tracks`);
             })

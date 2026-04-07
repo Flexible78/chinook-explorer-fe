@@ -10,7 +10,7 @@ apiClient.interceptors.request.use((config) => {
     const token = useAuthStore.getState().token;
 
     if (token) {
-        // ОБЯЗАТЕЛЬНО обратные апострофы ` ` и ${token}
+        // Use a Bearer token for authenticated API requests.
         config.headers.Authorization = `Bearer ${token}`;
     }
 

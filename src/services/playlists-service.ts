@@ -1,5 +1,5 @@
 import { apiClient } from "./api-client.js";
-import type { Track } from "./albums-service.js"; // Берем тип трека из альбомов
+import type { Track } from "./albums-service.js";
 
 export interface Playlist {
     playlist_id: number;
