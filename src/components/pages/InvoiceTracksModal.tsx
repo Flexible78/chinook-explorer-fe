@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Center, Dialog, Spinner, Table, Button } from "@chakra-ui/react";
 import { fetchInvoiceTracks } from "../../services/customers-service.js";
-import type { Track } from "../../services/albums-service.js";
+import type { InvoiceTrack } from "../../services/customers-service.js";
 
 interface Props {
     invoiceId: number | null;
@@ -9,22 +9,43 @@ interface Props {
 }
 
 const InvoiceTracksModal = ({ invoiceId, onClose }: Props) => {
-    const [tracks, setTracks] = useState<Track[]>([]);
-    const [loading, setLoading] = useState(false);
+    const [tracks, setTracks] = useState<InvoiceTrack[]>([]);
+    const [loadedInvoiceId, setLoadedInvoiceId] = useState<number | null>(null);
 
     useEffect(() => {
-        if (!invoiceId) return;
-        setLoading(true);
+        if (!invoiceId) {
+            return;
+        }
+
+        let cancelled = false;
         console.log(`[InvoiceTracksModal] 🟢 Fetching tracks for invoice: ${invoiceId}`);
 
         fetchInvoiceTracks(invoiceId)
             .then(data => {
+                if (cancelled) {
+                    return;
+                }
+
                 setTracks(data);
+                setLoadedInvoiceId(invoiceId);
                 console.log(`[InvoiceTracksModal] ✅ Loaded ${data.length} tracks`);
             })
-            .catch(err => console.error("[InvoiceTracksModal] ❌ Error:", err))
-            .finally(() => setLoading(false));
+            .catch(err => {
+                if (cancelled) {
+                    return;
+                }
+
+                setTracks([]);
+                setLoadedInvoiceId(invoiceId);
+                console.error("[InvoiceTracksModal] ❌ Error:", err);
+            });
+
+        return () => {
+            cancelled = true;
+        };
     }, [invoiceId]);
+
+    const loading = invoiceId !== null && loadedInvoiceId !== invoiceId;
 
     return (
         <Dialog.Root open={!!invoiceId} onOpenChange={(e) => !e.open && onClose()}>
@@ -44,10 +65,10 @@ const InvoiceTracksModal = ({ invoiceId, onClose }: Props) => {
                                 </Table.Row></Table.Header>
                                 <Table.Body>
                                     {tracks.map((t, i) => (
-                                        <Table.Row key={i}>
-                                            <Table.Cell>{t.trackName || (t as any).name}</Table.Cell>
-                                            <Table.Cell color="gray.400">{t.genreName || (t as any).genre_name}</Table.Cell>
-                                            <Table.Cell textAlign="right" color="green.400">${(t as any).unitPrice || (t as any).unit_price}</Table.Cell>
+                                        <Table.Row key={`${t.trackName ?? t.name ?? "track"}-${i}`}>
+                                            <Table.Cell>{t.trackName ?? t.name ?? "Unknown track"}</Table.Cell>
+                                            <Table.Cell color="gray.400">{t.genreName ?? t.genre_name ?? "Unknown genre"}</Table.Cell>
+                                            <Table.Cell textAlign="right" color="green.400">${t.unitPrice ?? t.unit_price ?? "-"}</Table.Cell>
                                         </Table.Row>
                                     ))}
                                 </Table.Body>

@@ -39,6 +39,13 @@ export interface Invoice {
     total: number;
 }
 
+export interface InvoiceTrack extends Track {
+    name?: string;
+    genre_name?: string;
+    unitPrice?: number;
+    unit_price?: number;
+}
+
 // Запрос счетов клиента
 export const fetchCustomerInvoices = async (customerId: number): Promise<Invoice[]> => {
     const response = await apiClient.get(`/customers/${customerId}/invoices`);
@@ -46,7 +53,7 @@ export const fetchCustomerInvoices = async (customerId: number): Promise<Invoice
 };
 
 // Запрос треков конкретного счета
-export const fetchInvoiceTracks = async (invoiceId: number): Promise<Track[]> => {
+export const fetchInvoiceTracks = async (invoiceId: number): Promise<InvoiceTrack[]> => {
     // Внимание: проверь, что роут на бэкенде называется именно так!
     const response = await apiClient.get(`/invoices/${invoiceId}/tracks`);
     return response.data;
