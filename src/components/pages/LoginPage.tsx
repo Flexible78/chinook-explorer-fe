@@ -4,6 +4,7 @@ import type { AxiosError } from "axios";
 import { useNavigate } from "react-router-dom";
 import { Box, Button, Input, Stack, Text } from "@chakra-ui/react";
 import { loginUser } from "../../services/auth-service";
+import { useAuthStore } from "../../state-management/auth-store";
 
 interface LoginErrorResponse {
     error?: string;
@@ -21,7 +22,14 @@ const LoginPage = () => {
 
         try {
             await loginUser({ email, password });
-            navigate("/albums");
+
+            // Умный редирект по роли
+            const role = useAuthStore.getState().role;
+            if (role === "SALE") {
+                navigate("/customers");
+            } else {
+                navigate("/albums");
+            }
         } catch (err) {
             const loginError = err as AxiosError<LoginErrorResponse>;
             setError(loginError.response?.data?.error ?? "Ошибка при входе");
@@ -53,7 +61,7 @@ const LoginPage = () => {
                         <Text color="red.500" fontSize="sm">{error}</Text>
                     )}
 
-                    <Button type="submit" colorScheme="blue" width="full">
+                    <Button type="submit" colorPalette="blue" width="full">
                         Войти
                     </Button>
                 </Stack>

@@ -1,14 +1,18 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Box, Table, Spinner, Center, Heading } from "@chakra-ui/react";
+import { Navigate } from "react-router-dom";
+import { useAuthStore } from "../../state-management/auth-store.js";
 import { fetchPlaylists, type Playlist } from "../../services/playlists-service.js";
-import PlaylistTracksModal from "./PlaylistTracksModal.js"; // 1. Импортируем модалку
+import PlaylistTracksModal from "./PlaylistTracksModal.js";
+
+type SortConfig = { key: keyof Playlist; direction: "asc" | "desc" } | null;
 
 const PlaylistsPage = () => {
+    const role = useAuthStore(s => s.role);
     const [playlists, setPlaylists] = useState<Playlist[]>([]);
     const [loading, setLoading] = useState(true);
-
-    // 2. Стейт для того, по какому плейлисту кликнули
     const [selectedPlaylist, setSelectedPlaylist] = useState<Playlist | null>(null);
+    const [sortConfig, setSortConfig] = useState<SortConfig>(null);
 
     useEffect(() => {
         fetchPlaylists()
@@ -16,39 +20,60 @@ const PlaylistsPage = () => {
             .catch(() => setLoading(false));
     }, []);
 
+    if (role !== "USER" && role !== "SUPER_USER") return <Navigate to="/customers" replace />;
+
+    const sortedPlaylists = useMemo(() => {
+        if (!sortConfig) return playlists;
+        return [...playlists].sort((a, b) => {
+            if (a[sortConfig.key] < b[sortConfig.key]) return sortConfig.direction === "asc" ? -1 : 1;
+            if (a[sortConfig.key] > b[sortConfig.key]) return sortConfig.direction === "asc" ? 1 : -1;
+            return 0;
+        });
+    }, [playlists, sortConfig]);
+
+    const handleSort = (key: keyof Playlist) => {
+        let direction: "asc" | "desc" = "asc";
+        if (sortConfig && sortConfig.key === key && sortConfig.direction === "asc") {
+            direction = "desc";
+        }
+        setSortConfig({ key, direction });
+    };
+
     if (loading) return <Center h="100vh"><Spinner size="xl" color="purple.500" /></Center>;
 
     return (
         <Box p="8" maxW="800px" mx="auto">
             <Heading size="2xl" color="purple.400" mb="8">🎵 Playlists</Heading>
 
-            <Table.Root variant="outline" stickyHeader interactive>
-                <Table.Header>
-                    <Table.Row bg="bg.muted">
-                        <Table.ColumnHeader width="20%">ID</Table.ColumnHeader>
-                        <Table.ColumnHeader width="80%">Playlist Name</Table.ColumnHeader>
-                    </Table.Row>
-                </Table.Header>
-                <Table.Body>
-                    {playlists.map((pl) => (
-                        <Table.Row
-                            key={pl.playlist_id}
-                            cursor="pointer"
-                            _hover={{ bg: "whiteAlpha.100" }}
-                            onClick={() => setSelectedPlaylist(pl)} // 3. Вешаем клик
-                        >
-                            <Table.Cell>{pl.playlist_id}</Table.Cell>
-                            <Table.Cell fontWeight="bold">{pl.name}</Table.Cell>
+            <Box overflowX="auto">
+                <Table.Root variant="outline" stickyHeader interactive>
+                    <Table.Header>
+                        <Table.Row bg="bg.muted">
+                            <Table.ColumnHeader width="20%" cursor="pointer" onClick={() => handleSort("playlist_id")}>
+                                ID {sortConfig?.key === "playlist_id" ? (sortConfig.direction === "asc" ? "↑" : "↓") : ""}
+                            </Table.ColumnHeader>
+                            <Table.ColumnHeader width="80%" cursor="pointer" onClick={() => handleSort("name")}>
+                                Playlist Name {sortConfig?.key === "name" ? (sortConfig.direction === "asc" ? "↑" : "↓") : ""}
+                            </Table.ColumnHeader>
                         </Table.Row>
-                    ))}
-                </Table.Body>
-            </Table.Root>
+                    </Table.Header>
+                    <Table.Body>
+                        {sortedPlaylists.map((pl) => (
+                            <Table.Row
+                                key={pl.playlist_id}
+                                cursor="pointer"
+                                _hover={{ bg: "whiteAlpha.100" }}
+                                onClick={() => setSelectedPlaylist(pl)}
+                            >
+                                <Table.Cell>{pl.playlist_id}</Table.Cell>
+                                <Table.Cell fontWeight="bold">{pl.name}</Table.Cell>
+                            </Table.Row>
+                        ))}
+                    </Table.Body>
+                </Table.Root>
+            </Box>
 
-            {/* 4. Рисуем модалку */}
-            <PlaylistTracksModal
-                playlist={selectedPlaylist}
-                onClose={() => setSelectedPlaylist(null)}
-            />
+            <PlaylistTracksModal playlist={selectedPlaylist} onClose={() => setSelectedPlaylist(null)} />
         </Box>
     );
 };
