@@ -1,12 +1,15 @@
-import { useEffect, useState, useMemo } from "react";
-import { Box, Table, Spinner, Center, Heading, Button, Flex } from "@chakra-ui/react";
+import { useEffect, useState } from "react";
+import { Box, Spinner, Center, Heading, Button, Flex } from "@chakra-ui/react";
 import { fetchCustomers, type Customer } from "../../services/customers-service.js";
 import { useAuthStore } from "../../state-management/auth-store.js";
 import SalesAgentModal from "./SalesAgentModal.js";
 import CustomerInvoicesModal from "./CustomerInvoicesModal.js";
 import { Navigate } from "react-router-dom";
+import DataTable, { type DataTableColumn } from "../ui/DataTable.js";
 
-type SortConfig = { key: keyof Customer; direction: "asc" | "desc" } | null;
+const getCustomerId = (customer: Customer) => (
+    customer.id ?? customer.customerId ?? customer.customer_id ?? null
+);
 
 const CustomersPage = () => {
     const role = useAuthStore(s => s.role);
@@ -14,7 +17,6 @@ const CustomersPage = () => {
     const [loading, setLoading] = useState(true);
     const [selectedCustomerForAgent, setSelectedCustomerForAgent] = useState<number | null>(null);
     const [selectedCustomerForInvoices, setSelectedCustomerForInvoices] = useState<number | null>(null);
-    const [sortConfig, setSortConfig] = useState<SortConfig>(null);
 
     useEffect(() => {
         fetchCustomers()
@@ -24,24 +26,65 @@ const CustomersPage = () => {
 
     if (role !== "SALE" && role !== "SUPER_USER") return <Navigate to="/albums" replace />;
 
-    const sortedCustomers = useMemo(() => {
-        if (!sortConfig) return customers;
-        return [...customers].sort((a, b) => {
-            const valA = a[sortConfig.key] || "";
-            const valB = b[sortConfig.key] || "";
-            if (valA < valB) return sortConfig.direction === "asc" ? -1 : 1;
-            if (valA > valB) return sortConfig.direction === "asc" ? 1 : -1;
-            return 0;
-        });
-    }, [customers, sortConfig]);
+    const customerColumns: DataTableColumn<Customer>[] = [
+        {
+            key: "name",
+            header: "Name",
+            sortable: true,
+            sortAccessor: customer => `${customer.firstName} ${customer.lastName}`,
+            render: customer => `${customer.firstName} ${customer.lastName}`,
+            cellProps: { fontWeight: "bold" },
+        },
+        {
+            key: "location",
+            header: "Location",
+            sortable: true,
+            sortAccessor: "city",
+            render: customer => `${customer.city}, ${customer.country}`,
+            headerProps: { display: { base: "none", md: "table-cell" } },
+            cellProps: { display: { base: "none", md: "table-cell" } },
+        },
+        {
+            key: "email",
+            header: "Email",
+            accessor: "email",
+            sortable: true,
+            headerProps: { display: { base: "none", md: "table-cell" } },
+            cellProps: { display: { base: "none", md: "table-cell" }, color: "gray.500" },
+        },
+        {
+            key: "actions",
+            header: "",
+            render: customer => {
+                const customerId = getCustomerId(customer);
 
-    const handleSort = (key: keyof Customer) => {
-        let direction: "asc" | "desc" = "asc";
-        if (sortConfig && sortConfig.key === key && sortConfig.direction === "asc") {
-            direction = "desc";
-        }
-        setSortConfig({ key, direction });
-    };
+                return (
+                    <Flex gap="2" justify="flex-end">
+                        <Button
+                            size="sm"
+                            colorPalette="green"
+                            variant="outline"
+                            onClick={() => customerId != null && setSelectedCustomerForInvoices(customerId)}
+                            disabled={customerId == null}
+                        >
+                            Invoices
+                        </Button>
+                        <Button
+                            size="sm"
+                            colorPalette="cyan"
+                            variant="outline"
+                            onClick={() => customerId != null && setSelectedCustomerForAgent(customerId)}
+                            disabled={customerId == null}
+                        >
+                            Agent
+                        </Button>
+                    </Flex>
+                );
+            },
+            headerProps: { textAlign: "right" },
+            cellProps: { textAlign: "right" },
+        },
+    ];
 
     if (loading) return <Center h="100vh"><Spinner size="xl" color="blue.500" /></Center>;
 
@@ -50,44 +93,11 @@ const CustomersPage = () => {
             <Heading size="2xl" color="blue.400" mb="8">👥 Customers Directory</Heading>
 
             <Box overflowX="auto">
-                <Table.Root variant="outline" stickyHeader interactive>
-                    <Table.Header>
-                        <Table.Row bg="bg.muted">
-                            <Table.ColumnHeader cursor="pointer" onClick={() => handleSort("firstName")}>
-                                Name {sortConfig?.key === "firstName" ? (sortConfig.direction === "asc" ? "↑" : "↓") : ""}
-                            </Table.ColumnHeader>
-                            <Table.ColumnHeader cursor="pointer" onClick={() => handleSort("city")} display={{ base: "none", md: "table-cell" }}>
-                                Location {sortConfig?.key === "city" ? (sortConfig.direction === "asc" ? "↑" : "↓") : ""}
-                            </Table.ColumnHeader>
-                            <Table.ColumnHeader cursor="pointer" onClick={() => handleSort("email")} display={{ base: "none", md: "table-cell" }}>
-                                Email {sortConfig?.key === "email" ? (sortConfig.direction === "asc" ? "↑" : "↓") : ""}
-                            </Table.ColumnHeader>
-                            <Table.ColumnHeader textAlign="right"></Table.ColumnHeader>
-                        </Table.Row>
-                    </Table.Header>
-                    <Table.Body>
-                        {sortedCustomers.map((c) => {
-                            const id = c.id || (c as any).customerId || (c as any).customer_id;
-                            return (
-                                <Table.Row key={id}>
-                                    <Table.Cell fontWeight="bold">{c.firstName} {c.lastName}</Table.Cell>
-                                    <Table.Cell display={{ base: "none", md: "table-cell" }}>{c.city}, {c.country}</Table.Cell>
-                                    <Table.Cell display={{ base: "none", md: "table-cell" }} color="gray.500">{c.email}</Table.Cell>
-                                    <Table.Cell textAlign="right">
-                                        <Flex gap="2" justify="flex-end">
-                                            <Button size="sm" colorPalette="green" variant="outline" onClick={() => setSelectedCustomerForInvoices(id)}>
-                                                Invoices
-                                            </Button>
-                                            <Button size="sm" colorPalette="cyan" variant="outline" onClick={() => setSelectedCustomerForAgent(id)}>
-                                                Agent
-                                            </Button>
-                                        </Flex>
-                                    </Table.Cell>
-                                </Table.Row>
-                            );
-                        })}
-                    </Table.Body>
-                </Table.Root>
+                <DataTable
+                    data={customers}
+                    columns={customerColumns}
+                    getRowKey={(customer) => getCustomerId(customer) ?? `${customer.email}-${customer.firstName}-${customer.lastName}`}
+                />
             </Box>
 
             <CustomerInvoicesModal customerId={selectedCustomerForInvoices} onClose={() => setSelectedCustomerForInvoices(null)} />
