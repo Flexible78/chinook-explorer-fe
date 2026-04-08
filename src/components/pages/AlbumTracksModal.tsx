@@ -1,11 +1,33 @@
 import { useEffect, useState } from "react";
-import { Button, Center, Dialog, Spinner, Table } from "@chakra-ui/react";
+import { Button, Center, Dialog, Spinner } from "@chakra-ui/react";
 import { fetchTracks, type Album, type Track } from "../../services/albums-service.js";
+import DataTable, { type DataTableColumn } from "../ui/DataTable.js";
 
 interface Props {
     album: Album | null;
     onClose: () => void;
 }
+
+const trackColumns: DataTableColumn<Track>[] = [
+    {
+        key: "index",
+        header: "#",
+        render: (_track, index) => index + 1,
+        cellProps: { width: "10%" },
+    },
+    {
+        key: "trackName",
+        header: "Track",
+        accessor: "trackName",
+        cellProps: { fontWeight: "medium" },
+    },
+    {
+        key: "genreName",
+        header: "Genre",
+        accessor: "genreName",
+        cellProps: { color: "gray.500", textAlign: "right" },
+    },
+];
 
 const AlbumTracksModal = ({ album, onClose }: Props) => {
     const [tracks, setTracks] = useState<Track[]>([]);
@@ -36,19 +58,13 @@ const AlbumTracksModal = ({ album, onClose }: Props) => {
                         {loading ? (
                             <Center py="10"><Spinner color="purple.500" /></Center>
                         ) : (
-                            <Table.Root size="sm" variant="line">
-                                <Table.Body>
-                                    {tracks.map((track, i) => (
-                                        <Table.Row key={track.trackName + i}>
-                                            <Table.Cell width="10%">{i + 1}</Table.Cell>
-                                            <Table.Cell fontWeight="medium">{track.trackName}</Table.Cell>
-                                            <Table.Cell color="gray.500" textAlign="right">
-                                                {track.genreName}
-                                            </Table.Cell>
-                                        </Table.Row>
-                                    ))}
-                                </Table.Body>
-                            </Table.Root>
+                            <DataTable
+                                data={tracks}
+                                columns={trackColumns}
+                                getRowKey={(track) => `${track.trackName}-${track.genreName}`}
+                                showHeader={false}
+                                tableProps={{ size: "sm", variant: "line" }}
+                            />
                         )}
                     </Dialog.Body>
 

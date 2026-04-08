@@ -11,7 +11,7 @@ export interface DataTableColumn<T> {
     accessor?: keyof T;
     sortable?: boolean;
     sortAccessor?: keyof T | ((row: T) => SortValue);
-    render?: (row: T) => ReactNode;
+    render?: (row: T, index: number) => ReactNode;
     headerProps?: ComponentProps<typeof Table.ColumnHeader>;
     cellProps?: ComponentProps<typeof Table.Cell>;
 }
@@ -21,6 +21,8 @@ interface DataTableProps<T> {
     columns: DataTableColumn<T>[];
     getRowKey: (row: T) => string | number;
     onRowClick?: (row: T) => void;
+    showHeader?: boolean;
+    tableProps?: ComponentProps<typeof Table.Root>;
 }
 
 const normalizeSortValue = (value: SortValue): string | number => {
@@ -59,13 +61,20 @@ const resolveSortValue = <T,>(column: DataTableColumn<T>, row: T): SortValue => 
     return null;
 };
 
-const resolveCellContent = <T,>(column: DataTableColumn<T>, row: T): ReactNode => {
-    if (column.render) return column.render(row);
+const resolveCellContent = <T,>(column: DataTableColumn<T>, row: T, index: number): ReactNode => {
+    if (column.render) return column.render(row, index);
     if (column.accessor) return row[column.accessor] as ReactNode;
     return null;
 };
 
-const DataTable = <T,>({ data, columns, getRowKey, onRowClick }: DataTableProps<T>) => {
+const DataTable = <T,>({
+    data,
+    columns,
+    getRowKey,
+    onRowClick,
+    showHeader = true,
+    tableProps,
+}: DataTableProps<T>) => {
     const [sortConfig, setSortConfig] = useState<SortConfig>(null);
 
     const sortedData = useMemo(() => {
@@ -102,24 +111,26 @@ const DataTable = <T,>({ data, columns, getRowKey, onRowClick }: DataTableProps<
     };
 
     return (
-        <Table.Root variant="outline" stickyHeader interactive>
-            <Table.Header>
-                <Table.Row bg="bg.muted">
-                    {columns.map((column) => (
-                        <Table.ColumnHeader
-                            key={column.key}
-                            cursor={column.sortable ? "pointer" : undefined}
-                            onClick={() => handleSort(column)}
-                            {...column.headerProps}
-                        >
-                            {column.header}
-                            {renderSortIndicator(column.key)}
-                        </Table.ColumnHeader>
-                    ))}
-                </Table.Row>
-            </Table.Header>
+        <Table.Root variant="outline" stickyHeader interactive {...tableProps}>
+            {showHeader ? (
+                <Table.Header>
+                    <Table.Row bg="bg.muted">
+                        {columns.map((column) => (
+                            <Table.ColumnHeader
+                                key={column.key}
+                                cursor={column.sortable ? "pointer" : undefined}
+                                onClick={() => handleSort(column)}
+                                {...column.headerProps}
+                            >
+                                {column.header}
+                                {renderSortIndicator(column.key)}
+                            </Table.ColumnHeader>
+                        ))}
+                    </Table.Row>
+                </Table.Header>
+            ) : null}
             <Table.Body>
-                {sortedData.map((row) => (
+                {sortedData.map((row, index) => (
                     <Table.Row
                         key={getRowKey(row)}
                         cursor={onRowClick ? "pointer" : undefined}
@@ -127,7 +138,7 @@ const DataTable = <T,>({ data, columns, getRowKey, onRowClick }: DataTableProps<
                     >
                         {columns.map((column) => (
                             <Table.Cell key={column.key} {...column.cellProps}>
-                                {resolveCellContent(column, row)}
+                                {resolveCellContent(column, row, index)}
                             </Table.Cell>
                         ))}
                     </Table.Row>

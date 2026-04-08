@@ -1,17 +1,68 @@
 import { useEffect, useState } from "react";
-import { Center, Dialog, Spinner, Table, Button } from "@chakra-ui/react";
+import { Center, Dialog, Spinner, Button } from "@chakra-ui/react";
 import { fetchCustomerInvoices, type Invoice } from "../../services/customers-service.js";
 import InvoiceTracksModal from "./InvoiceTracksModal.js";
+import DataTable, { type DataTableColumn } from "../ui/DataTable.js";
 
 interface Props {
     customerId: number | null;
     onClose: () => void;
 }
 
+type InvoiceRow = Invoice & {
+    invoice_id?: number;
+    invoice_date?: string;
+};
+
+const getInvoiceId = (invoice: InvoiceRow) => invoice.invoiceId ?? invoice.invoice_id ?? null;
+const getInvoiceDate = (invoice: InvoiceRow) => invoice.invoiceDate ?? invoice.invoice_date ?? null;
+
 const CustomerInvoicesModal = ({ customerId, onClose }: Props) => {
-    const [invoices, setInvoices] = useState<Invoice[]>([]);
+    const [invoices, setInvoices] = useState<InvoiceRow[]>([]);
     const [loading, setLoading] = useState(false);
     const [selectedInvoiceId, setSelectedInvoiceId] = useState<number | null>(null);
+
+    const invoiceColumns: DataTableColumn<InvoiceRow>[] = [
+        {
+            key: "id",
+            header: "ID",
+            render: invoice => getInvoiceId(invoice) ?? "Unknown",
+        },
+        {
+            key: "date",
+            header: "Date",
+            render: invoice => {
+                const date = getInvoiceDate(invoice);
+                return date ? new Date(date).toLocaleDateString() : "Unknown";
+            },
+        },
+        {
+            key: "total",
+            header: "Total",
+            render: invoice => `$${invoice.total}`,
+            cellProps: { fontWeight: "bold" },
+        },
+        {
+            key: "actions",
+            header: "",
+            render: invoice => {
+                const invoiceId = getInvoiceId(invoice);
+
+                return (
+                    <Button
+                        size="xs"
+                        colorPalette="green"
+                        onClick={() => invoiceId != null && setSelectedInvoiceId(invoiceId)}
+                        disabled={invoiceId == null}
+                    >
+                        Details
+                    </Button>
+                );
+            },
+            headerProps: { textAlign: "right" },
+            cellProps: { textAlign: "right" },
+        },
+    ];
 
     useEffect(() => {
         if (!customerId) return;
@@ -38,30 +89,12 @@ const CustomerInvoicesModal = ({ customerId, onClose }: Props) => {
                         </Dialog.Header>
                         <Dialog.Body>
                             {loading ? <Center py="10"><Spinner color="green.500" /></Center> : (
-                                <Table.Root size="sm" variant="outline">
-                                    <Table.Header><Table.Row bg="bg.muted">
-                                        <Table.ColumnHeader>ID</Table.ColumnHeader>
-                                        <Table.ColumnHeader>Date</Table.ColumnHeader>
-                                        <Table.ColumnHeader>Total</Table.ColumnHeader>
-                                        <Table.ColumnHeader textAlign="right"></Table.ColumnHeader>
-                                    </Table.Row></Table.Header>
-                                    <Table.Body>
-                                        {invoices.map((inv) => {
-                                            const id = inv.invoiceId || (inv as any).invoice_id;
-                                            const date = inv.invoiceDate || (inv as any).invoice_date;
-                                            return (
-                                                <Table.Row key={id}>
-                                                    <Table.Cell>{id}</Table.Cell>
-                                                    <Table.Cell>{new Date(date).toLocaleDateString()}</Table.Cell>
-                                                    <Table.Cell fontWeight="bold">${inv.total}</Table.Cell>
-                                                    <Table.Cell textAlign="right">
-                                                        <Button size="xs" colorPalette="green" onClick={() => setSelectedInvoiceId(id)}>Details</Button>
-                                                    </Table.Cell>
-                                                </Table.Row>
-                                            );
-                                        })}
-                                    </Table.Body>
-                                </Table.Root>
+                                <DataTable
+                                    data={invoices}
+                                    columns={invoiceColumns}
+                                    getRowKey={(invoice) => getInvoiceId(invoice) ?? `${getInvoiceDate(invoice)}-${invoice.total}`}
+                                    tableProps={{ size: "sm", variant: "outline" }}
+                                />
                             )}
                         </Dialog.Body>
                         <Dialog.CloseTrigger asChild position="absolute" top="2" right="2">

@@ -1,22 +1,36 @@
 import { useEffect, useState } from "react";
-import { Center, Dialog, Spinner, Table, Button } from "@chakra-ui/react";
-import { fetchInvoiceTracks } from "../../services/customers-service.js";
-import type { Track } from "../../services/albums-service.js";
+import { Center, Dialog, Spinner, Button } from "@chakra-ui/react";
+import { fetchInvoiceTracks, type InvoiceTrack } from "../../services/customers-service.js";
+import DataTable, { type DataTableColumn } from "../ui/DataTable.js";
 
 interface Props {
     invoiceId: number | null;
     onClose: () => void;
 }
 
-type InvoiceTrackRow = Track & {
-    name?: string;
-    genre_name?: string;
-    unitPrice?: number;
-    unit_price?: number;
-};
+const invoiceTrackColumns: DataTableColumn<InvoiceTrack>[] = [
+    {
+        key: "track",
+        header: "Track Name",
+        render: track => track.trackName ?? track.name ?? "Unknown track",
+    },
+    {
+        key: "genre",
+        header: "Genre",
+        render: track => track.genreName ?? track.genre_name ?? "Unknown genre",
+        cellProps: { color: "gray.400" },
+    },
+    {
+        key: "price",
+        header: "Price",
+        render: track => `$${track.unitPrice ?? track.unit_price ?? "-"}`,
+        headerProps: { textAlign: "right" },
+        cellProps: { textAlign: "right", color: "green.400" },
+    },
+];
 
 const InvoiceTracksModal = ({ invoiceId, onClose }: Props) => {
-    const [tracks, setTracks] = useState<InvoiceTrackRow[]>([]);
+    const [tracks, setTracks] = useState<InvoiceTrack[]>([]);
     const [loadedInvoiceId, setLoadedInvoiceId] = useState<number | null>(null);
 
     useEffect(() => {
@@ -33,7 +47,7 @@ const InvoiceTracksModal = ({ invoiceId, onClose }: Props) => {
                     return;
                 }
 
-                setTracks(data as InvoiceTrackRow[]);
+                setTracks(data);
                 setLoadedInvoiceId(invoiceId);
                 console.log(`[InvoiceTracksModal] ✅ Loaded ${data.length} tracks`);
             })
@@ -64,22 +78,12 @@ const InvoiceTracksModal = ({ invoiceId, onClose }: Props) => {
                     </Dialog.Header>
                     <Dialog.Body>
                         {loading ? <Center py="10"><Spinner color="green.500" /></Center> : (
-                            <Table.Root size="sm">
-                                <Table.Header><Table.Row>
-                                    <Table.ColumnHeader>Track Name</Table.ColumnHeader>
-                                    <Table.ColumnHeader>Genre</Table.ColumnHeader>
-                                    <Table.ColumnHeader textAlign="right">Price</Table.ColumnHeader>
-                                </Table.Row></Table.Header>
-                                <Table.Body>
-                                    {tracks.map((t, i) => (
-                                        <Table.Row key={`${t.trackName ?? t.name ?? "track"}-${i}`}>
-                                            <Table.Cell>{t.trackName ?? t.name ?? "Unknown track"}</Table.Cell>
-                                            <Table.Cell color="gray.400">{t.genreName ?? t.genre_name ?? "Unknown genre"}</Table.Cell>
-                                            <Table.Cell textAlign="right" color="green.400">${t.unitPrice ?? t.unit_price ?? "-"}</Table.Cell>
-                                        </Table.Row>
-                                    ))}
-                                </Table.Body>
-                            </Table.Root>
+                            <DataTable
+                                data={tracks}
+                                columns={invoiceTrackColumns}
+                                getRowKey={(track) => `${track.trackName ?? track.name ?? "track"}-${track.unitPrice ?? track.unit_price ?? "price"}`}
+                                tableProps={{ size: "sm" }}
+                            />
                         )}
                     </Dialog.Body>
                     <Dialog.CloseTrigger asChild position="absolute" top="2" right="2">
