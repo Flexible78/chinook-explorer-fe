@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
-import { Box, Spinner, Center, Heading } from "@chakra-ui/react";
+import { useState } from "react";
+import { Box, Spinner, Center, Heading, Text } from "@chakra-ui/react";
 import { Navigate } from "react-router-dom";
 import { useAuthStore } from "../../state-management/auth-store.js";
-import { fetchAlbums, type Album } from "../../services/albums-service.js";
+import { type Album } from "../../services/albums-service.js";
+import { useAlbums } from "../../hooks/queries.js";
 import AlbumTracksModal from "./AlbumTracksModal.js";
 import DataTable, { type DataTableColumn } from "../ui/DataTable.js";
 
@@ -15,9 +16,9 @@ const albumColumns: DataTableColumn<Album>[] = [
         headerProps: { width: "10%" },
     },
     {
-        key: "albumName",
+        key: "name",
         header: "Album Title",
-        accessor: "albumName",
+        accessor: "name",
         sortable: true,
         headerProps: { width: "50%" },
         cellProps: { fontWeight: "bold", color: "white" },
@@ -34,20 +35,14 @@ const albumColumns: DataTableColumn<Album>[] = [
 
 const AlbumsPage = () => {
     const role = useAuthStore(s => s.role);
-    const [albums, setAlbums] = useState<Album[]>([]);
-    const [loading, setLoading] = useState(true);
     const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
-
-    useEffect(() => {
-        fetchAlbums()
-            .then(data => { setAlbums(data); setLoading(false); })
-            .catch(() => setLoading(false));
-    }, []);
+    const { data: albums = [], isPending, error } = useAlbums();
 
     // Sales users are not allowed on media pages.
     if (role !== "USER" && role !== "SUPER_USER") return <Navigate to="/customers" replace />;
 
-    if (loading) return <Center h="100vh"><Spinner size="xl" color="purple.500" /></Center>;
+    if (isPending) return <Center h="100vh"><Spinner size="xl" color="purple.500" /></Center>;
+    if (error) return <Center h="100vh"><Text color="red.400">Failed to load albums.</Text></Center>;
 
     return (
         <Box p="8" maxW="1200px" mx="auto">

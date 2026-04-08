@@ -1,92 +1,123 @@
-import { useEffect, useState } from "react";
-import { Box, Spinner, Center, Heading, Button, Flex } from "@chakra-ui/react";
-import { fetchCustomers, type Customer } from "../../services/customers-service.js";
+import { useState } from "react";
+import { Box, Spinner, Center, Heading, Button, Flex, Text } from "@chakra-ui/react";
+import { type Customer } from "../../services/customers-service.js";
 import { useAuthStore } from "../../state-management/auth-store.js";
 import SalesAgentModal from "./SalesAgentModal.js";
 import CustomerInvoicesModal from "./CustomerInvoicesModal.js";
 import { Navigate } from "react-router-dom";
 import DataTable, { type DataTableColumn } from "../ui/DataTable.js";
+import { useCustomers } from "../../hooks/queries.js";
 
-const getCustomerId = (customer: Customer) => (
-    customer.id ?? customer.customerId ?? customer.customer_id ?? null
-);
+const getCustomerFullName = (customer: Customer) => `${customer.firstName} ${customer.lastName}`;
+const getCustomerLocation = (customer: Customer) => `${customer.city}, ${customer.country}`;
+
+interface CustomerColumnHandlers {
+    onOpenInvoices: (customerId: number) => void;
+    onOpenAgent: (customerId: number) => void;
+}
+
+const renderCustomerActions = (
+    customer: Customer,
+    { onOpenInvoices, onOpenAgent }: CustomerColumnHandlers,
+) => {
+    const handleInvoicesClick = () => {
+        onOpenInvoices(customer.id);
+    };
+
+    const handleAgentClick = () => {
+        onOpenAgent(customer.id);
+    };
+
+    return (
+        <Flex gap="2" justify="flex-end">
+            <Button
+                size="sm"
+                colorPalette="green"
+                variant="outline"
+                onClick={handleInvoicesClick}
+            >
+                Invoices
+            </Button>
+            <Button
+                size="sm"
+                colorPalette="cyan"
+                variant="outline"
+                onClick={handleAgentClick}
+            >
+                Agent
+            </Button>
+        </Flex>
+    );
+};
+
+const createCustomerColumns = (
+    handlers: CustomerColumnHandlers,
+): DataTableColumn<Customer>[] => [
+    {
+        key: "name",
+        header: "Name",
+        sortable: true,
+        sortAccessor: getCustomerFullName,
+        render: getCustomerFullName,
+        cellProps: { fontWeight: "bold" },
+    },
+    {
+        key: "location",
+        header: "Location",
+        sortable: true,
+        sortAccessor: "city",
+        render: getCustomerLocation,
+        headerProps: { display: { base: "none", md: "table-cell" } },
+        cellProps: { display: { base: "none", md: "table-cell" } },
+    },
+    {
+        key: "email",
+        header: "Email",
+        accessor: "email",
+        sortable: true,
+        headerProps: { display: { base: "none", md: "table-cell" } },
+        cellProps: { display: { base: "none", md: "table-cell" }, color: "gray.500" },
+    },
+    {
+        key: "actions",
+        header: "",
+        render: customer => renderCustomerActions(customer, handlers),
+        headerProps: { textAlign: "right" },
+        cellProps: { textAlign: "right" },
+    },
+];
 
 const CustomersPage = () => {
     const role = useAuthStore(s => s.role);
-    const [customers, setCustomers] = useState<Customer[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [selectedCustomerForAgent, setSelectedCustomerForAgent] = useState<number | null>(null);
-    const [selectedCustomerForInvoices, setSelectedCustomerForInvoices] = useState<number | null>(null);
-
-    useEffect(() => {
-        fetchCustomers()
-            .then(data => { setCustomers(data); setLoading(false); })
-            .catch(() => setLoading(false));
-    }, []);
+    const [selectedAgentCustomerId, setSelectedAgentCustomerId] = useState<number | null>(null);
+    const [selectedInvoicesCustomerId, setSelectedInvoicesCustomerId] = useState<number | null>(null);
+    const { data: customers = [], isPending, error } = useCustomers();
 
     if (role !== "SALE" && role !== "SUPER_USER") return <Navigate to="/albums" replace />;
 
-    const customerColumns: DataTableColumn<Customer>[] = [
-        {
-            key: "name",
-            header: "Name",
-            sortable: true,
-            sortAccessor: customer => `${customer.firstName} ${customer.lastName}`,
-            render: customer => `${customer.firstName} ${customer.lastName}`,
-            cellProps: { fontWeight: "bold" },
-        },
-        {
-            key: "location",
-            header: "Location",
-            sortable: true,
-            sortAccessor: "city",
-            render: customer => `${customer.city}, ${customer.country}`,
-            headerProps: { display: { base: "none", md: "table-cell" } },
-            cellProps: { display: { base: "none", md: "table-cell" } },
-        },
-        {
-            key: "email",
-            header: "Email",
-            accessor: "email",
-            sortable: true,
-            headerProps: { display: { base: "none", md: "table-cell" } },
-            cellProps: { display: { base: "none", md: "table-cell" }, color: "gray.500" },
-        },
-        {
-            key: "actions",
-            header: "",
-            render: customer => {
-                const customerId = getCustomerId(customer);
+    const handleInvoicesOpen = (customerId: number) => {
+        setSelectedInvoicesCustomerId(customerId);
+    };
 
-                return (
-                    <Flex gap="2" justify="flex-end">
-                        <Button
-                            size="sm"
-                            colorPalette="green"
-                            variant="outline"
-                            onClick={() => customerId != null && setSelectedCustomerForInvoices(customerId)}
-                            disabled={customerId == null}
-                        >
-                            Invoices
-                        </Button>
-                        <Button
-                            size="sm"
-                            colorPalette="cyan"
-                            variant="outline"
-                            onClick={() => customerId != null && setSelectedCustomerForAgent(customerId)}
-                            disabled={customerId == null}
-                        >
-                            Agent
-                        </Button>
-                    </Flex>
-                );
-            },
-            headerProps: { textAlign: "right" },
-            cellProps: { textAlign: "right" },
-        },
-    ];
+    const handleInvoicesClose = () => {
+        setSelectedInvoicesCustomerId(null);
+    };
 
-    if (loading) return <Center h="100vh"><Spinner size="xl" color="blue.500" /></Center>;
+    const handleAgentOpen = (customerId: number) => {
+        setSelectedAgentCustomerId(customerId);
+    };
+
+    const handleAgentClose = () => {
+        setSelectedAgentCustomerId(null);
+    };
+
+    const customerColumns = createCustomerColumns({
+        onOpenInvoices: handleInvoicesOpen,
+        onOpenAgent: handleAgentOpen,
+    });
+
+    if (isPending) return <Center h="100vh"><Spinner size="xl" color="blue.500" /></Center>;
+    if (error) return <Center h="100vh"><Text color="red.400">Failed to load customers.</Text></Center>;
 
     return (
         <Box p={{ base: "4", md: "8" }} maxW="1200px" mx="auto">
@@ -96,13 +127,13 @@ const CustomersPage = () => {
                 <DataTable
                     data={customers}
                     columns={customerColumns}
-                    getRowKey={(customer, index) => getCustomerId(customer) ?? `${customer.email}-${customer.firstName}-${customer.lastName}-${index}`}
+                    getRowKey={(customer) => customer.id}
                     pageSize={10}
                 />
             </Box>
 
-            <CustomerInvoicesModal customerId={selectedCustomerForInvoices} onClose={() => setSelectedCustomerForInvoices(null)} />
-            <SalesAgentModal customerId={selectedCustomerForAgent} onClose={() => setSelectedCustomerForAgent(null)} />
+            <CustomerInvoicesModal customerId={selectedInvoicesCustomerId} onClose={handleInvoicesClose} />
+            <SalesAgentModal customerId={selectedAgentCustomerId} onClose={handleAgentClose} />
         </Box>
     );
 };

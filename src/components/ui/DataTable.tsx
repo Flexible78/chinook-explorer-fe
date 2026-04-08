@@ -132,73 +132,104 @@ const DataTable = <T,>({
         return sortConfig.direction === "asc" ? " ↑" : " ↓";
     };
 
+    const getAbsoluteIndex = (index: number) => (
+        pageSize ? (currentPage - 1) * pageSize + index : index
+    );
+
+    const goToPreviousPage = () => {
+        setCurrentPage(page => Math.max(1, page - 1));
+    };
+
+    const goToNextPage = () => {
+        setCurrentPage(page => Math.min(totalPages, page + 1));
+    };
+
+    const renderHeaderCell = (column: DataTableColumn<T>) => {
+        const handleHeaderClick = () => {
+            handleSort(column);
+        };
+
+        return (
+            <Table.ColumnHeader
+                key={column.key}
+                cursor={column.sortable ? "pointer" : undefined}
+                onClick={column.sortable ? handleHeaderClick : undefined}
+                {...column.headerProps}
+            >
+                {column.header}
+                {renderSortIndicator(column.key)}
+            </Table.ColumnHeader>
+        );
+    };
+
+    const renderTableRow = (row: T, index: number) => {
+        const absoluteIndex = getAbsoluteIndex(index);
+        const rowKey = getRowKey(row, absoluteIndex) ?? absoluteIndex;
+        const handleRowClick = onRowClick ? () => onRowClick(row) : undefined;
+
+        return (
+            <Table.Row
+                key={rowKey}
+                cursor={onRowClick ? "pointer" : undefined}
+                onClick={handleRowClick}
+            >
+                {columns.map((column) => (
+                    <Table.Cell key={`${rowKey}-${column.key}`} {...column.cellProps}>
+                        {resolveCellContent(column, row, absoluteIndex)}
+                    </Table.Cell>
+                ))}
+            </Table.Row>
+        );
+    };
+
+    const renderPagination = () => {
+        if (!pageSize || totalPages <= 1) {
+            return null;
+        }
+
+        return (
+            <Flex mt="4" align="center" justify="space-between" gap="3" wrap="wrap">
+                <Text color="gray.400" fontSize="sm">
+                    Page {currentPage} of {totalPages}
+                </Text>
+                <Flex gap="2">
+                    <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={goToPreviousPage}
+                        disabled={currentPage === 1}
+                    >
+                        Previous
+                    </Button>
+                    <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={goToNextPage}
+                        disabled={currentPage === totalPages}
+                    >
+                        Next
+                    </Button>
+                </Flex>
+            </Flex>
+        );
+    };
+
     return (
         <>
             <Table.Root variant="outline" stickyHeader interactive {...tableProps}>
                 {showHeader ? (
                     <Table.Header>
                         <Table.Row bg="bg.muted">
-                            {columns.map((column) => (
-                                <Table.ColumnHeader
-                                    key={column.key}
-                                    cursor={column.sortable ? "pointer" : undefined}
-                                    onClick={() => handleSort(column)}
-                                    {...column.headerProps}
-                                >
-                                    {column.header}
-                                    {renderSortIndicator(column.key)}
-                                </Table.ColumnHeader>
-                            ))}
+                            {columns.map(renderHeaderCell)}
                         </Table.Row>
                     </Table.Header>
                 ) : null}
                 <Table.Body>
-                    {paginatedData.map((row, index) => {
-                        const absoluteIndex = pageSize ? (currentPage - 1) * pageSize + index : index;
-                        const rowKey = getRowKey(row, absoluteIndex) ?? absoluteIndex;
-
-                        return (
-                            <Table.Row
-                                key={rowKey}
-                                cursor={onRowClick ? "pointer" : undefined}
-                                onClick={onRowClick ? () => onRowClick(row) : undefined}
-                            >
-                                {columns.map((column) => (
-                                    <Table.Cell key={`${rowKey}-${column.key}`} {...column.cellProps}>
-                                        {resolveCellContent(column, row, absoluteIndex)}
-                                    </Table.Cell>
-                                ))}
-                            </Table.Row>
-                        );
-                    })}
+                    {paginatedData.map(renderTableRow)}
                 </Table.Body>
             </Table.Root>
 
-            {pageSize && totalPages > 1 ? (
-                <Flex mt="4" align="center" justify="space-between" gap="3" wrap="wrap">
-                    <Text color="gray.400" fontSize="sm">
-                        Page {currentPage} of {totalPages}
-                    </Text>
-                    <Flex gap="2">
-                        <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => setCurrentPage(page => Math.max(1, page - 1))}
-                            disabled={currentPage === 1}
-                        >
-                            Previous
-                        </Button>
-                        <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => setCurrentPage(page => Math.min(totalPages, page + 1))}
-                            disabled={currentPage === totalPages}
-                        >
-                            Next
-                        </Button>
-                    </Flex>
-                </Flex>
-            ) : null}
+            {renderPagination()}
         </>
     );
 };

@@ -1,9 +1,7 @@
 import { apiClient } from "./api-client.js";
 import type { Track } from "./albums-service.js";
 export interface Customer {
-    id?: number;
-    customerId?: number;
-    customer_id?: number;
+    id: number;
     firstName: string;
     lastName: string;
     city: string;
@@ -12,7 +10,7 @@ export interface Customer {
 }
 
 export const fetchCustomers = async (): Promise<Customer[]> => {
-    const response = await apiClient.get("/customers");
+    const response = await apiClient.get<Customer[]>("/customers");
     return response.data;
 };
 
@@ -36,21 +34,32 @@ export interface Invoice {
     total: number;
 }
 
+interface RawInvoice {
+    invoiceId: number;
+    invoiceDate: string;
+    total: number | string;
+}
+
 export interface InvoiceTrack extends Track {
-    name?: string;
-    genre_name?: string;
-    unitPrice?: number;
-    unit_price?: number;
+    unitPrice: number;
 }
 
 // Load invoices for a given customer.
 export const fetchCustomerInvoices = async (customerId: number): Promise<Invoice[]> => {
-    const response = await apiClient.get(`/customers/${customerId}/invoices`);
-    return response.data;
+    const response = await apiClient.get<RawInvoice[]>(`/customers/${customerId}/invoices`);
+
+    return response.data.map((invoice) => ({
+        ...invoice,
+        total: Number(invoice.total),
+    }));
 };
 
 // Load tracks for a given invoice.
 export const fetchInvoiceTracks = async (invoiceId: number): Promise<InvoiceTrack[]> => {
-    const response = await apiClient.get(`/invoices/${invoiceId}/tracks`);
-    return response.data;
+    const response = await apiClient.get<Array<InvoiceTrack & { unitPrice: number | string }>>(`/invoices/${invoiceId}/tracks`);
+
+    return response.data.map((track) => ({
+        ...track,
+        unitPrice: Number(track.unitPrice),
+    }));
 };

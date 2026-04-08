@@ -15,6 +15,20 @@ const NavBar = () => {
 
     // Highlight the active navigation item.
     const isActive = (path: string) => location.pathname.startsWith(path);
+    const canViewCustomers = role === "SUPER_USER" || role === "SALE";
+    const canViewMedia = role === "SUPER_USER" || role === "USER";
+
+    const handleCustomersNavigation = () => {
+        navigate("/customers");
+    };
+
+    const handleAlbumsNavigation = () => {
+        navigate("/albums");
+    };
+
+    const handlePlaylistsNavigation = () => {
+        navigate("/playlists");
+    };
 
     return (
         <Box bg="gray.900" px={{ base: 4, md: 8 }} py={3} borderBottom="1px solid" borderColor="gray.700" mb={6}>
@@ -26,29 +40,29 @@ const NavBar = () => {
 
                 {/* Main navigation with role checks */}
                 <Stack direction="row" gap={4}>
-                    {(role === "SUPER_USER" || role === "SALE") && (
+                    {canViewCustomers && (
                         <Button
                             variant={isActive("/customers") ? "solid" : "ghost"}
                             colorPalette="blue"
-                            onClick={() => navigate("/customers")}
+                            onClick={handleCustomersNavigation}
                         >
                             👥 Customers
                         </Button>
                     )}
 
-                    {(role === "SUPER_USER" || role === "USER") && (
+                    {canViewMedia && (
                         <>
                             <Button
                                 variant={isActive("/albums") ? "solid" : "ghost"}
                                 colorPalette="purple"
-                                onClick={() => navigate("/albums")}
+                                onClick={handleAlbumsNavigation}
                             >
                                 💿 Albums
                             </Button>
                             <Button
                                 variant={isActive("/playlists") ? "solid" : "ghost"}
                                 colorPalette="purple"
-                                onClick={() => navigate("/playlists")}
+                                onClick={handlePlaylistsNavigation}
                             >
                                 🎵 Playlists
                             </Button>

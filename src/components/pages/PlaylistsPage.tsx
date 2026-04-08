@@ -1,16 +1,17 @@
-import { useEffect, useState } from "react";
-import { Box, Spinner, Center, Heading } from "@chakra-ui/react";
+import { useState } from "react";
+import { Box, Spinner, Center, Heading, Text } from "@chakra-ui/react";
 import { Navigate } from "react-router-dom";
 import { useAuthStore } from "../../state-management/auth-store.js";
-import { fetchPlaylists, type Playlist } from "../../services/playlists-service.js";
+import { type Playlist } from "../../services/playlists-service.js";
+import { usePlaylists } from "../../hooks/queries.js";
 import PlaylistTracksModal from "./PlaylistTracksModal.js";
 import DataTable, { type DataTableColumn } from "../ui/DataTable.js";
 
 const playlistColumns: DataTableColumn<Playlist>[] = [
     {
-        key: "playlist_id",
+        key: "id",
         header: "ID",
-        accessor: "playlist_id",
+        accessor: "id",
         sortable: true,
         headerProps: { width: "20%" },
     },
@@ -26,19 +27,13 @@ const playlistColumns: DataTableColumn<Playlist>[] = [
 
 const PlaylistsPage = () => {
     const role = useAuthStore(s => s.role);
-    const [playlists, setPlaylists] = useState<Playlist[]>([]);
-    const [loading, setLoading] = useState(true);
     const [selectedPlaylist, setSelectedPlaylist] = useState<Playlist | null>(null);
-
-    useEffect(() => {
-        fetchPlaylists()
-            .then(data => { setPlaylists(data); setLoading(false); })
-            .catch(() => setLoading(false));
-    }, []);
+    const { data: playlists = [], isPending, error } = usePlaylists();
 
     if (role !== "USER" && role !== "SUPER_USER") return <Navigate to="/customers" replace />;
 
-    if (loading) return <Center h="100vh"><Spinner size="xl" color="purple.500" /></Center>;
+    if (isPending) return <Center h="100vh"><Spinner size="xl" color="purple.500" /></Center>;
+    if (error) return <Center h="100vh"><Text color="red.400">Failed to load playlists.</Text></Center>;
 
     return (
         <Box p="8" maxW="800px" mx="auto">
@@ -48,7 +43,7 @@ const PlaylistsPage = () => {
                 <DataTable
                     data={playlists}
                     columns={playlistColumns}
-                    getRowKey={(playlist) => playlist.playlist_id}
+                    getRowKey={(playlist) => playlist.id}
                     onRowClick={setSelectedPlaylist}
                     pageSize={10}
                 />
