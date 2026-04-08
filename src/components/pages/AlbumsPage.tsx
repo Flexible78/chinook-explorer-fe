@@ -2,46 +2,31 @@ import { useEffect, useState } from "react";
 import { Box, Spinner, Center, Heading } from "@chakra-ui/react";
 import { Navigate } from "react-router-dom";
 import { useAuthStore } from "../../state-management/auth-store.js";
-import { fetchAlbums } from "../../services/albums-service.js";
+import { fetchAlbums, type Album } from "../../services/albums-service.js";
 import AlbumTracksModal from "./AlbumTracksModal.js";
 import DataTable, { type DataTableColumn } from "../ui/DataTable.js";
 
-type AlbumRow = {
-    id?: number;
-    albumName?: string;
-    artistName?: string;
-    title?: string;
-    album_name?: string;
-    artist?: string;
-};
-
-const getAlbumTitle = (album: AlbumRow) => album.albumName ?? album.title ?? album.album_name ?? "Untitled album";
-const getArtistName = (album: AlbumRow) => album.artistName ?? album.artist ?? "Unknown artist";
-
-const albumColumns: DataTableColumn<AlbumRow>[] = [
+const albumColumns: DataTableColumn<Album>[] = [
     {
         key: "id",
         header: "ID",
-        render: (album) => album.id ?? "Unknown",
+        accessor: "id",
         sortable: true,
-        sortAccessor: (album) => album.id ?? Number.MAX_SAFE_INTEGER,
         headerProps: { width: "10%" },
     },
     {
         key: "albumName",
         header: "Album Title",
-        render: (album) => getAlbumTitle(album),
+        accessor: "albumName",
         sortable: true,
-        sortAccessor: (album) => getAlbumTitle(album),
         headerProps: { width: "50%" },
         cellProps: { fontWeight: "bold", color: "white" },
     },
     {
         key: "artistName",
         header: "Artist",
-        render: (album) => getArtistName(album),
+        accessor: "artistName",
         sortable: true,
-        sortAccessor: (album) => getArtistName(album),
         headerProps: { width: "40%" },
         cellProps: { color: "gray.400" },
     },
@@ -49,13 +34,13 @@ const albumColumns: DataTableColumn<AlbumRow>[] = [
 
 const AlbumsPage = () => {
     const role = useAuthStore(s => s.role);
-    const [albums, setAlbums] = useState<AlbumRow[]>([]);
+    const [albums, setAlbums] = useState<Album[]>([]);
     const [loading, setLoading] = useState(true);
-    const [selectedAlbum, setSelectedAlbum] = useState<AlbumRow | null>(null);
+    const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
 
     useEffect(() => {
         fetchAlbums()
-            .then(data => { setAlbums(data as AlbumRow[]); setLoading(false); })
+            .then(data => { setAlbums(data); setLoading(false); })
             .catch(() => setLoading(false));
     }, []);
 
@@ -72,7 +57,7 @@ const AlbumsPage = () => {
                 <DataTable
                     data={albums}
                     columns={albumColumns}
-                    getRowKey={(album, index) => album.id ?? `album-${index}`}
+                    getRowKey={(album) => album.id}
                     onRowClick={setSelectedAlbum}
                     pageSize={10}
                 />

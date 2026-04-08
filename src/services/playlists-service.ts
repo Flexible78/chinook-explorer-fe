@@ -6,9 +6,18 @@ export interface Playlist {
     name: string;
 }
 
+interface RawPlaylist {
+    id: number;
+    name: string;
+}
+
 export const fetchPlaylists = async (): Promise<Playlist[]> => {
-    const response = await apiClient.get("/playlists");
-    return response.data;
+    const response = await apiClient.get<RawPlaylist[]>("/playlists");
+
+    return response.data.map((playlist) => ({
+        playlist_id: playlist.id,
+        name: playlist.name,
+    }));
 };
 
 export const fetchPlaylistTracks = async (playlistId: number): Promise<Track[]> => {
