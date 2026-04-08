@@ -1,5 +1,5 @@
-import { type Album } from "../../services/albums-service.js";
-import { useAlbumTracks } from "../../hooks/queries.js";
+import { useQuery } from "@tanstack/react-query";
+import { fetchTracks, type Album, type Track } from "../../services/albums-service.js";
 import TracksModal from "../ui/TracksModal.js";
 import { getTrackRowKey, standardTrackColumns } from "../ui/trackTableColumns.js";
 
@@ -9,7 +9,12 @@ interface Props {
 }
 
 const AlbumTracksModal = ({ album, onClose }: Props) => {
-    const { data: tracks = [], isPending, error } = useAlbumTracks(album?.id ?? null);
+    const albumId = album?.id;
+    const { data: tracks = [], isPending, error } = useQuery<Track[]>({
+        queryKey: ["albums", albumId, "tracks"],
+        queryFn: () => fetchTracks(albumId as number),
+        enabled: albumId !== undefined,
+    });
 
     return (
         <TracksModal

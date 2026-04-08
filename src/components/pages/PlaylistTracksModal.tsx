@@ -1,6 +1,7 @@
 // src/components/pages/PlaylistTracksModal.tsx
-import { type Playlist } from "../../services/playlists-service.js";
-import { usePlaylistTracks } from "../../hooks/queries.js";
+import { useQuery } from "@tanstack/react-query";
+import type { Track } from "../../services/albums-service.js";
+import { fetchPlaylistTracks, type Playlist } from "../../services/playlists-service.js";
 import TracksModal from "../ui/TracksModal.js";
 import { getTrackRowKey, standardTrackColumns } from "../ui/trackTableColumns.js";
 
@@ -10,7 +11,12 @@ interface Props {
 }
 
 const PlaylistTracksModal = ({ playlist, onClose }: Props) => {
-    const { data: tracks = [], isPending, error } = usePlaylistTracks(playlist?.id ?? null);
+    const playlistId = playlist?.id;
+    const { data: tracks = [], isPending, error } = useQuery<Track[]>({
+        queryKey: ["playlists", playlistId, "tracks"],
+        queryFn: () => fetchPlaylistTracks(playlistId as number),
+        enabled: playlistId !== undefined,
+    });
 
     return (
         <TracksModal

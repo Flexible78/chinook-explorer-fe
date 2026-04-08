@@ -1,9 +1,9 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Box, Spinner, Center, Heading, Text } from "@chakra-ui/react";
 import { Navigate } from "react-router-dom";
 import { useAuthStore } from "../../state-management/auth-store.js";
-import { type Playlist } from "../../services/playlists-service.js";
-import { usePlaylists } from "../../hooks/queries.js";
+import { fetchPlaylists, type Playlist } from "../../services/playlists-service.js";
 import PlaylistTracksModal from "./PlaylistTracksModal.js";
 import DataTable, { type DataTableColumn } from "../ui/DataTable.js";
 
@@ -28,9 +28,15 @@ const playlistColumns: DataTableColumn<Playlist>[] = [
 const PlaylistsPage = () => {
     const role = useAuthStore(s => s.role);
     const [selectedPlaylist, setSelectedPlaylist] = useState<Playlist | null>(null);
-    const { data: playlists = [], isPending, error } = usePlaylists();
+    const canViewPlaylists = role === "USER" || role === "SUPER_USER";
 
-    if (role !== "USER" && role !== "SUPER_USER") return <Navigate to="/customers" replace />;
+    const { data: playlists = [], isPending, error } = useQuery<Playlist[]>({
+        queryKey: ["playlists"],
+        queryFn: fetchPlaylists,
+        enabled: canViewPlaylists,
+    });
+
+    if (!canViewPlaylists) return <Navigate to="/customers" replace />;
 
     if (isPending) return <Center h="100vh"><Spinner size="xl" color="purple.500" /></Center>;
     if (error) return <Center h="100vh"><Text color="red.400">Failed to load playlists.</Text></Center>;

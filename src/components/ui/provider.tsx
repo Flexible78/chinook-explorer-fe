@@ -1,14 +1,23 @@
 "use client"
 
-import { QueryClientProvider } from "@tanstack/react-query"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { ChakraProvider, defaultSystem } from "@chakra-ui/react"
 import {
   ColorModeProvider,
   type ColorModeProviderProps,
 } from "./color-mode"
-import { queryClient } from "../../lib/query-client.js"
 
-export function Provider(props: ColorModeProviderProps) {
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60_000,
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+})
+
+export function AppProvider(props: ColorModeProviderProps) {
   return (
     <QueryClientProvider client={queryClient}>
       <ChakraProvider value={defaultSystem}>

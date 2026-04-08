@@ -1,5 +1,5 @@
 import { Button, Flex, Table, Text } from "@chakra-ui/react";
-import { useEffect, useMemo, useState, type ComponentProps, type ReactNode } from "react";
+import { useMemo, useState, type ComponentProps, type ReactNode } from "react";
 
 type SortDirection = "asc" | "desc";
 type SortConfig = { key: string; direction: SortDirection } | null;
@@ -97,27 +97,19 @@ const DataTable = <T,>({
     }, [columns, data, sortConfig]);
 
     const totalPages = pageSize ? Math.max(1, Math.ceil(sortedData.length / pageSize)) : 1;
-
-    useEffect(() => {
-        setCurrentPage(1);
-    }, [data, pageSize, sortConfig]);
-
-    useEffect(() => {
-        if (currentPage > totalPages) {
-            setCurrentPage(totalPages);
-        }
-    }, [currentPage, totalPages]);
+    const visiblePage = Math.min(currentPage, totalPages);
 
     const paginatedData = useMemo(() => {
         if (!pageSize) return sortedData;
 
-        const startIndex = (currentPage - 1) * pageSize;
+        const startIndex = (visiblePage - 1) * pageSize;
         return sortedData.slice(startIndex, startIndex + pageSize);
-    }, [currentPage, pageSize, sortedData]);
+    }, [pageSize, sortedData, visiblePage]);
 
     const handleSort = (column: DataTableColumn<T>) => {
         if (!column.sortable) return;
 
+        setCurrentPage(1);
         setSortConfig(currentSort => {
             if (currentSort?.key === column.key && currentSort.direction === "asc") {
                 return { key: column.key, direction: "desc" };
@@ -133,15 +125,15 @@ const DataTable = <T,>({
     };
 
     const getAbsoluteIndex = (index: number) => (
-        pageSize ? (currentPage - 1) * pageSize + index : index
+        pageSize ? (visiblePage - 1) * pageSize + index : index
     );
 
     const goToPreviousPage = () => {
-        setCurrentPage(page => Math.max(1, page - 1));
+        setCurrentPage(Math.max(1, visiblePage - 1));
     };
 
     const goToNextPage = () => {
-        setCurrentPage(page => Math.min(totalPages, page + 1));
+        setCurrentPage(Math.min(totalPages, visiblePage + 1));
     };
 
     const renderHeaderCell = (column: DataTableColumn<T>) => {
@@ -190,14 +182,14 @@ const DataTable = <T,>({
         return (
             <Flex mt="4" align="center" justify="space-between" gap="3" wrap="wrap">
                 <Text color="gray.400" fontSize="sm">
-                    Page {currentPage} of {totalPages}
+                    Page {visiblePage} of {totalPages}
                 </Text>
                 <Flex gap="2">
                     <Button
                         size="sm"
                         variant="outline"
                         onClick={goToPreviousPage}
-                        disabled={currentPage === 1}
+                        disabled={visiblePage === 1}
                     >
                         Previous
                     </Button>
@@ -205,7 +197,7 @@ const DataTable = <T,>({
                         size="sm"
                         variant="outline"
                         onClick={goToNextPage}
-                        disabled={currentPage === totalPages}
+                        disabled={visiblePage === totalPages}
                     >
                         Next
                     </Button>

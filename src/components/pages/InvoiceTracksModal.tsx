@@ -1,5 +1,5 @@
-import { type InvoiceTrack } from "../../services/customers-service.js";
-import { useInvoiceTracks } from "../../hooks/queries.js";
+import { useQuery } from "@tanstack/react-query";
+import { fetchInvoiceTracks, type InvoiceTrack } from "../../services/customers-service.js";
 import TracksModal from "../ui/TracksModal.js";
 import { getInvoiceTrackRowKey, invoiceTrackColumns } from "../ui/trackTableColumns.js";
 
@@ -9,7 +9,11 @@ interface Props {
 }
 
 const InvoiceTracksModal = ({ invoiceId, onClose }: Props) => {
-    const { data: tracks = [], isPending, error } = useInvoiceTracks(invoiceId);
+    const { data: tracks = [], isPending, error } = useQuery<InvoiceTrack[]>({
+        queryKey: ["invoices", invoiceId, "tracks"],
+        queryFn: () => fetchInvoiceTracks(invoiceId as number),
+        enabled: invoiceId !== null,
+    });
 
     return (
         <TracksModal<InvoiceTrack>

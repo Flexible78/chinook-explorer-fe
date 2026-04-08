@@ -1,9 +1,9 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Center, Dialog, Spinner, Button, Text } from "@chakra-ui/react";
-import { type Invoice } from "../../services/customers-service.js";
+import { fetchCustomerInvoices, type Invoice } from "../../services/customers-service.js";
 import InvoiceTracksModal from "./InvoiceTracksModal.js";
 import DataTable, { type DataTableColumn } from "../ui/DataTable.js";
-import { useCustomerInvoices } from "../../hooks/queries.js";
 
 interface Props {
     customerId: number | null;
@@ -40,7 +40,11 @@ const renderInvoiceActions = (
 
 const CustomerInvoicesModal = ({ customerId, onClose }: Props) => {
     const [selectedInvoiceId, setSelectedInvoiceId] = useState<number | null>(null);
-    const { data: invoices = [], isPending, error } = useCustomerInvoices(customerId);
+    const { data: invoices = [], isPending, error } = useQuery<Invoice[]>({
+        queryKey: ["customers", customerId, "invoices"],
+        queryFn: () => fetchCustomerInvoices(customerId as number),
+        enabled: customerId !== null,
+    });
 
     const handleDialogOpenChange = (details: { open: boolean }) => {
         if (!details.open) {

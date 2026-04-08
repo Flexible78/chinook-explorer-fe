@@ -1,6 +1,6 @@
+import { useQuery } from "@tanstack/react-query";
 import { Center, Dialog, Spinner, Text, Stack, Badge, Button } from "@chakra-ui/react";
-import { useSalesAgent } from "../../hooks/queries.js";
-import type { SalesAgent } from "../../services/customers-service.js";
+import { fetchSalesAgent, type SalesAgent } from "../../services/customers-service.js";
 
 interface Props {
     customerId: number | null;
@@ -22,7 +22,11 @@ const renderAgentDetails = (agent: SalesAgent) => (
 );
 
 const SalesAgentModal = ({ customerId, onClose }: Props) => {
-    const { data: agent, isPending, error } = useSalesAgent(customerId);
+    const { data: agent, isPending, error } = useQuery<SalesAgent>({
+        queryKey: ["customers", customerId, "agent"],
+        queryFn: () => fetchSalesAgent(customerId as number),
+        enabled: customerId !== null,
+    });
 
     const handleDialogOpenChange = (details: { open: boolean }) => {
         if (!details.open) {

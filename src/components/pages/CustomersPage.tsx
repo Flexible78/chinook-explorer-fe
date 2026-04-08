@@ -1,12 +1,12 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Box, Spinner, Center, Heading, Button, Flex, Text } from "@chakra-ui/react";
-import { type Customer } from "../../services/customers-service.js";
+import { fetchCustomers, type Customer } from "../../services/customers-service.js";
 import { useAuthStore } from "../../state-management/auth-store.js";
 import SalesAgentModal from "./SalesAgentModal.js";
 import CustomerInvoicesModal from "./CustomerInvoicesModal.js";
 import { Navigate } from "react-router-dom";
 import DataTable, { type DataTableColumn } from "../ui/DataTable.js";
-import { useCustomers } from "../../hooks/queries.js";
 
 const getCustomerFullName = (customer: Customer) => `${customer.firstName} ${customer.lastName}`;
 const getCustomerLocation = (customer: Customer) => `${customer.city}, ${customer.country}`;
@@ -91,9 +91,15 @@ const CustomersPage = () => {
     const role = useAuthStore(s => s.role);
     const [selectedAgentCustomerId, setSelectedAgentCustomerId] = useState<number | null>(null);
     const [selectedInvoicesCustomerId, setSelectedInvoicesCustomerId] = useState<number | null>(null);
-    const { data: customers = [], isPending, error } = useCustomers();
+    const canViewCustomers = role === "SALE" || role === "SUPER_USER";
 
-    if (role !== "SALE" && role !== "SUPER_USER") return <Navigate to="/albums" replace />;
+    const { data: customers = [], isPending, error } = useQuery<Customer[]>({
+        queryKey: ["customers"],
+        queryFn: fetchCustomers,
+        enabled: canViewCustomers,
+    });
+
+    if (!canViewCustomers) return <Navigate to="/albums" replace />;
 
     const handleInvoicesOpen = (customerId: number) => {
         setSelectedInvoicesCustomerId(customerId);
