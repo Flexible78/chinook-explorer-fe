@@ -92,7 +92,7 @@ const CustomerInvoicesModal = ({ customerId, onClose }: Props) => {
                                 <DataTable
                                     data={invoices}
                                     columns={invoiceColumns}
-                                    getRowKey={(invoice) => getInvoiceId(invoice) ?? `${getInvoiceDate(invoice)}-${invoice.total}`}
+                                    getRowKey={(invoice, index) => getInvoiceId(invoice) ?? `${getInvoiceDate(invoice)}-${invoice.total}-${index}`}
                                     tableProps={{ size: "sm", variant: "outline" }}
                                 />
                             )}

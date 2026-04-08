@@ -81,7 +81,7 @@ const InvoiceTracksModal = ({ invoiceId, onClose }: Props) => {
                             <DataTable
                                 data={tracks}
                                 columns={invoiceTrackColumns}
-                                getRowKey={(track) => `${track.trackName ?? track.name ?? "track"}-${track.unitPrice ?? track.unit_price ?? "price"}`}
+                                getRowKey={(track, index) => `${track.trackName ?? track.name ?? "track"}-${track.unitPrice ?? track.unit_price ?? "price"}-${index}`}
                                 tableProps={{ size: "sm" }}
                             />
                         )}

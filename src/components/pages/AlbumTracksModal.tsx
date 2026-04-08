@@ -4,7 +4,7 @@ import { fetchTracks, type Album, type Track } from "../../services/albums-servi
 import DataTable, { type DataTableColumn } from "../ui/DataTable.js";
 
 interface Props {
-    album: Album | null;
+    album: ({ id?: number; albumName?: string; title?: string; album_name?: string } & Partial<Album>) | null;
     onClose: () => void;
 }
 
@@ -36,6 +36,12 @@ const AlbumTracksModal = ({ album, onClose }: Props) => {
     useEffect(() => {
         if (!album) return;
 
+        if (album.id == null) {
+            setTracks([]);
+            setLoading(false);
+            return;
+        }
+
         setLoading(true);
         fetchTracks(album.id)
             .then(setTracks)
@@ -50,7 +56,7 @@ const AlbumTracksModal = ({ album, onClose }: Props) => {
                 <Dialog.Content p="6" bg="gray.900" border="1px solid" borderColor="purple.500">
                     <Dialog.Header>
                         <Dialog.Title fontSize="xl" color="purple.300">
-                            {album?.albumName} — Tracks
+                            {album?.albumName ?? album?.title ?? album?.album_name ?? "Album"} — Tracks
                         </Dialog.Title>
                     </Dialog.Header>
 
@@ -61,7 +67,7 @@ const AlbumTracksModal = ({ album, onClose }: Props) => {
                             <DataTable
                                 data={tracks}
                                 columns={trackColumns}
-                                getRowKey={(track) => `${track.trackName}-${track.genreName}`}
+                                getRowKey={(track, index) => `${track.trackName}-${track.genreName}-${index}`}
                                 showHeader={false}
                                 tableProps={{ size: "sm", variant: "line" }}
                             />

@@ -6,33 +6,46 @@ import { fetchPlaylists, type Playlist } from "../../services/playlists-service.
 import PlaylistTracksModal from "./PlaylistTracksModal.js";
 import DataTable, { type DataTableColumn } from "../ui/DataTable.js";
 
-const playlistColumns: DataTableColumn<Playlist>[] = [
+type PlaylistRow = {
+    playlist_id?: number;
+    playlistId?: number;
+    id?: number;
+    name?: string;
+    title?: string;
+};
+
+const getPlaylistId = (playlist: PlaylistRow) => playlist.playlist_id ?? playlist.playlistId ?? playlist.id ?? null;
+const getPlaylistName = (playlist: PlaylistRow) => playlist.name ?? playlist.title ?? "Untitled playlist";
+
+const playlistColumns: DataTableColumn<PlaylistRow>[] = [
     {
         key: "playlist_id",
         header: "ID",
-        accessor: "playlist_id",
+        render: (playlist) => getPlaylistId(playlist) ?? "Unknown",
         sortable: true,
+        sortAccessor: (playlist) => getPlaylistId(playlist) ?? Number.MAX_SAFE_INTEGER,
         headerProps: { width: "20%" },
     },
     {
         key: "name",
         header: "Playlist Name",
-        accessor: "name",
+        render: (playlist) => getPlaylistName(playlist),
         sortable: true,
+        sortAccessor: (playlist) => getPlaylistName(playlist),
         headerProps: { width: "80%" },
-        cellProps: { fontWeight: "bold" },
+        cellProps: { fontWeight: "bold", color: "white" },
     },
 ];
 
 const PlaylistsPage = () => {
     const role = useAuthStore(s => s.role);
-    const [playlists, setPlaylists] = useState<Playlist[]>([]);
+    const [playlists, setPlaylists] = useState<PlaylistRow[]>([]);
     const [loading, setLoading] = useState(true);
-    const [selectedPlaylist, setSelectedPlaylist] = useState<Playlist | null>(null);
+    const [selectedPlaylist, setSelectedPlaylist] = useState<PlaylistRow | null>(null);
 
     useEffect(() => {
         fetchPlaylists()
-            .then(data => { setPlaylists(data); setLoading(false); })
+            .then(data => { setPlaylists(data as PlaylistRow[]); setLoading(false); })
             .catch(() => setLoading(false));
     }, []);
 
@@ -48,12 +61,13 @@ const PlaylistsPage = () => {
                 <DataTable
                     data={playlists}
                     columns={playlistColumns}
-                    getRowKey={(playlist) => playlist.playlist_id}
+                    getRowKey={(playlist, index) => getPlaylistId(playlist) ?? `playlist-${index}`}
                     onRowClick={setSelectedPlaylist}
+                    pageSize={10}
                 />
             </Box>
 
-            <PlaylistTracksModal playlist={selectedPlaylist} onClose={() => setSelectedPlaylist(null)} />
+            <PlaylistTracksModal playlist={selectedPlaylist as Playlist | null} onClose={() => setSelectedPlaylist(null)} />
         </Box>
     );
 };

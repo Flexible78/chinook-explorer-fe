@@ -96,7 +96,8 @@ const CustomersPage = () => {
                 <DataTable
                     data={customers}
                     columns={customerColumns}
-                    getRowKey={(customer) => getCustomerId(customer) ?? `${customer.email}-${customer.firstName}-${customer.lastName}`}
+                    getRowKey={(customer, index) => getCustomerId(customer) ?? `${customer.email}-${customer.firstName}-${customer.lastName}-${index}`}
+                    pageSize={10}
                 />
             </Box>
 

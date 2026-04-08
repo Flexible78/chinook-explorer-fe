@@ -6,9 +6,13 @@ import type { Track } from "../../services/albums-service.js";
 import DataTable, { type DataTableColumn } from "../ui/DataTable.js";
 
 interface Props {
-    playlist: Playlist | null;
+    playlist: (Playlist & { playlistId?: number; id?: number; title?: string }) | null;
     onClose: () => void;
 }
+
+const getPlaylistId = (playlist: Props["playlist"]) => (
+    playlist?.playlist_id ?? playlist?.playlistId ?? playlist?.id ?? null
+);
 
 const playlistTrackColumns: DataTableColumn<Track>[] = [
     {
@@ -39,7 +43,15 @@ const PlaylistTracksModal = ({ playlist, onClose }: Props) => {
         if (!playlist) return;
 
         setLoading(true);
-        fetchPlaylistTracks(playlist.playlist_id)
+        const playlistId = getPlaylistId(playlist);
+
+        if (playlistId == null) {
+            setTracks([]);
+            setLoading(false);
+            return;
+        }
+
+        fetchPlaylistTracks(playlistId)
             .then(setTracks)
             .catch(console.error)
             .finally(() => setLoading(false));
@@ -52,7 +64,7 @@ const PlaylistTracksModal = ({ playlist, onClose }: Props) => {
                 <Dialog.Content p="6" bg="gray.900" border="1px solid" borderColor="purple.500" position="relative">
                     <Dialog.Header>
                         <Dialog.Title fontSize="xl" color="purple.300" pr="8">
-                            Playlist: {playlist?.name}
+                            Playlist: {playlist?.name ?? playlist?.title ?? "Untitled playlist"}
                         </Dialog.Title>
                     </Dialog.Header>
 
@@ -63,7 +75,7 @@ const PlaylistTracksModal = ({ playlist, onClose }: Props) => {
                             <DataTable
                                 data={tracks}
                                 columns={playlistTrackColumns}
-                                getRowKey={(track) => `${track.trackName}-${track.genreName}`}
+                                getRowKey={(track, index) => `${track.trackName}-${track.genreName}-${index}`}
                                 showHeader={false}
                                 tableProps={{ size: "sm", variant: "line" }}
                             />
