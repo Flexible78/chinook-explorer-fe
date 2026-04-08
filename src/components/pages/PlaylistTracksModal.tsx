@@ -78,6 +78,7 @@ const PlaylistTracksModal = ({ playlist, onClose }: Props) => {
                                 getRowKey={(track, index) => `${track.trackName}-${track.genreName}-${index}`}
                                 showHeader={false}
                                 tableProps={{ size: "sm", variant: "line" }}
+                                pageSize={10}
                             />
                         )}
                     </Dialog.Body>
