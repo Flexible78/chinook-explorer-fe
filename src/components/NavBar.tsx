@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "../state-management/auth-store.js";
 
 const NavBar = () => {
-    const { role, userData, logout } = useAuthStore();
+    const { role, email, logout } = useAuthStore();
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -17,18 +17,6 @@ const NavBar = () => {
     const isActive = (path: string) => location.pathname.startsWith(path);
     const canViewCustomers = role === "SUPER_USER" || role === "SALE";
     const canViewMedia = role === "SUPER_USER" || role === "USER";
-
-    const handleCustomersNavigation = () => {
-        navigate("/customers");
-    };
-
-    const handleAlbumsNavigation = () => {
-        navigate("/albums");
-    };
-
-    const handlePlaylistsNavigation = () => {
-        navigate("/playlists");
-    };
 
     return (
         <Box bg="gray.900" px={{ base: 4, md: 8 }} py={3} borderBottom="1px solid" borderColor="gray.700" mb={6}>
@@ -44,7 +32,7 @@ const NavBar = () => {
                         <Button
                             variant={isActive("/customers") ? "solid" : "ghost"}
                             colorPalette="blue"
-                            onClick={handleCustomersNavigation}
+                            onClick={() => navigate("/customers")}
                         >
                             👥 Customers
                         </Button>
@@ -55,14 +43,14 @@ const NavBar = () => {
                             <Button
                                 variant={isActive("/albums") ? "solid" : "ghost"}
                                 colorPalette="purple"
-                                onClick={handleAlbumsNavigation}
+                                onClick={() => navigate("/albums")}
                             >
                                 💿 Albums
                             </Button>
                             <Button
                                 variant={isActive("/playlists") ? "solid" : "ghost"}
                                 colorPalette="purple"
-                                onClick={handlePlaylistsNavigation}
+                                onClick={() => navigate("/playlists")}
                             >
                                 🎵 Playlists
                             </Button>
@@ -73,7 +61,7 @@ const NavBar = () => {
                 {/* Profile info and logout action */}
                 <Stack direction="row" gap={4} align="center">
                     <Text fontSize="sm" color="gray.400" display={{ base: "none", md: "block" }}>
-                        {userData?.email} ({role})
+                        {email} ({role})
                     </Text>
                     <Button size="sm" colorPalette="red" variant="outline" onClick={handleLogout}>
                         Logout 🚪

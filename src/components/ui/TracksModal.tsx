@@ -39,30 +39,6 @@ const TracksModal = <T,>({
         }
     };
 
-    const renderModalBody = () => {
-        if (loading) {
-            return <Center py="10"><Spinner color={spinnerColor} /></Center>;
-        }
-
-        if (errorMessage) {
-            return (
-                <Center py="10">
-                    <Text color="red.400">{errorMessage}</Text>
-                </Center>
-            );
-        }
-
-        return (
-            <DataTable
-                data={tracks}
-                columns={columns}
-                getRowKey={getRowKey}
-                tableProps={tableProps}
-                pageSize={pageSize}
-            />
-        );
-    };
-
     return (
         <Dialog.Root open={isOpen} onOpenChange={handleDialogOpenChange}>
             <Dialog.Backdrop />
@@ -74,7 +50,25 @@ const TracksModal = <T,>({
                         </Dialog.Title>
                     </Dialog.Header>
 
-                    <Dialog.Body pb="4">{renderModalBody()}</Dialog.Body>
+                    <Dialog.Body pb="4">
+                        {loading && <Center py="10"><Spinner color={spinnerColor} /></Center>}
+
+                        {!loading && errorMessage && (
+                            <Center py="10">
+                                <Text color="red.400">{errorMessage}</Text>
+                            </Center>
+                        )}
+
+                        {!loading && !errorMessage && (
+                            <DataTable
+                                data={tracks}
+                                columns={columns}
+                                getRowKey={getRowKey}
+                                tableProps={tableProps}
+                                pageSize={pageSize}
+                            />
+                        )}
+                    </Dialog.Body>
 
                     <Dialog.CloseTrigger asChild position="absolute" top="2" right="2">
                         <Button variant="ghost" size="sm" px="2" color="gray.400" _hover={{ color: "white", bg: "red.500" }}>

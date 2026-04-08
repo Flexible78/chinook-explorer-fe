@@ -2,36 +2,32 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-export interface UserData {
+interface AuthData {
     email: string;
     role: string;
     token: string;
 }
 
 interface AuthStore {
-    userData: UserData | null;
+    email: string | null;
     token: string | null;
     role: string | null;
-    setUserData: (userData: UserData) => void;
+    setAuth: (authData: AuthData) => void;
     logout: () => void;
 }
 
-// Persist auth state so the session survives page refreshes.
 export const useAuthStore = create<AuthStore>()(
     persist(
         (set) => ({
-            userData: null,
+            email: null,
             token: null,
             role: null,
-            setUserData: (userData) => set({
-                userData,
-                token: userData.token,
-                role: userData.role,
+            setAuth: (authData) => set({
+                email: authData.email,
+                token: authData.token,
+                role: authData.role,
             }),
-            logout: () => {
-                set({ userData: null, token: null, role: null });
-                localStorage.removeItem("auth-storage");
-            },
+            logout: () => set({ email: null, token: null, role: null }),
         }),
         {
             name: "auth-storage",

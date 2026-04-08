@@ -11,7 +11,7 @@ interface Props {
 const AlbumTracksModal = ({ album, onClose }: Props) => {
     const albumId = album?.id;
     const { data: tracks = [], isPending, error } = useQuery<Track[]>({
-        queryKey: ["albums", albumId, "tracks"],
+        queryKey: ["albumTracks", albumId],
         queryFn: () => fetchTracks(albumId as number),
         enabled: albumId !== undefined,
     });

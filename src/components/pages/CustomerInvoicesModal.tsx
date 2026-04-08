@@ -10,38 +10,10 @@ interface Props {
     onClose: () => void;
 }
 
-const formatInvoiceDate = (invoice: Invoice) => new Date(invoice.invoiceDate).toLocaleDateString();
-const formatInvoiceTotal = (invoice: Invoice) => `$${invoice.total}`;
-
-const renderInvoicesErrorState = () => (
-    <Center py="10">
-        <Text color="red.400">Failed to load invoices.</Text>
-    </Center>
-);
-
-const renderInvoiceActions = (
-    invoice: Invoice,
-    onOpenInvoiceTracks: (invoiceId: number) => void,
-) => {
-    const handleDetailsClick = () => {
-        onOpenInvoiceTracks(invoice.invoiceId);
-    };
-
-    return (
-        <Button
-            size="xs"
-            colorPalette="green"
-            onClick={handleDetailsClick}
-        >
-            Details
-        </Button>
-    );
-};
-
 const CustomerInvoicesModal = ({ customerId, onClose }: Props) => {
     const [selectedInvoiceId, setSelectedInvoiceId] = useState<number | null>(null);
     const { data: invoices = [], isPending, error } = useQuery<Invoice[]>({
-        queryKey: ["customers", customerId, "invoices"],
+        queryKey: ["customerInvoices", customerId],
         queryFn: () => fetchCustomerInvoices(customerId as number),
         enabled: customerId !== null,
     });
@@ -52,58 +24,42 @@ const CustomerInvoicesModal = ({ customerId, onClose }: Props) => {
         }
     };
 
-    const handleInvoiceTracksOpen = (invoiceId: number) => {
-        setSelectedInvoiceId(invoiceId);
-    };
-
-    const handleInvoiceTracksClose = () => {
-        setSelectedInvoiceId(null);
-    };
-
     const invoiceColumns: DataTableColumn<Invoice>[] = [
         {
             key: "id",
             header: "ID",
-            accessor: "invoiceId",
+            render: (invoice) => invoice.invoiceId,
+            sortValue: (invoice) => invoice.invoiceId,
         },
         {
             key: "date",
             header: "Date",
-            render: formatInvoiceDate,
+            render: (invoice) => new Date(invoice.invoiceDate).toLocaleDateString(),
+            sortValue: (invoice) => invoice.invoiceDate,
         },
         {
             key: "total",
             header: "Total",
-            render: formatInvoiceTotal,
+            render: (invoice) => `$${invoice.total}`,
+            sortValue: (invoice) => invoice.total,
             cellProps: { fontWeight: "bold" },
         },
         {
             key: "actions",
             header: "",
-            render: invoice => renderInvoiceActions(invoice, handleInvoiceTracksOpen),
+            render: (invoice) => (
+                <Button
+                    size="xs"
+                    colorPalette="green"
+                    onClick={() => setSelectedInvoiceId(invoice.invoiceId)}
+                >
+                    Details
+                </Button>
+            ),
             headerProps: { textAlign: "right" },
             cellProps: { textAlign: "right" },
         },
     ];
-
-    const renderInvoicesContent = () => {
-        if (isPending) {
-            return <Center py="10"><Spinner color="green.500" /></Center>;
-        }
-
-        if (error) {
-            return renderInvoicesErrorState();
-        }
-
-        return (
-            <DataTable
-                data={invoices}
-                columns={invoiceColumns}
-                getRowKey={(invoice) => invoice.invoiceId}
-                tableProps={{ size: "sm", variant: "outline" }}
-            />
-        );
-    };
 
     return (
         <>
@@ -114,7 +70,24 @@ const CustomerInvoicesModal = ({ customerId, onClose }: Props) => {
                         <Dialog.Header>
                             <Dialog.Title fontSize="2xl" color="green.300">🧾 Customer Invoices</Dialog.Title>
                         </Dialog.Header>
-                        <Dialog.Body>{renderInvoicesContent()}</Dialog.Body>
+                        <Dialog.Body>
+                            {isPending && <Center py="10"><Spinner color="green.500" /></Center>}
+
+                            {error && (
+                                <Center py="10">
+                                    <Text color="red.400">Failed to load invoices.</Text>
+                                </Center>
+                            )}
+
+                            {!isPending && !error && (
+                                <DataTable
+                                    data={invoices}
+                                    columns={invoiceColumns}
+                                    getRowKey={(invoice) => invoice.invoiceId}
+                                    tableProps={{ size: "sm", variant: "outline" }}
+                                />
+                            )}
+                        </Dialog.Body>
                         <Dialog.CloseTrigger asChild position="absolute" top="2" right="2">
                             <Button variant="ghost" size="sm">✕</Button>
                         </Dialog.CloseTrigger>
@@ -122,7 +95,7 @@ const CustomerInvoicesModal = ({ customerId, onClose }: Props) => {
                 </Dialog.Positioner>
             </Dialog.Root>
 
-            <InvoiceTracksModal invoiceId={selectedInvoiceId} onClose={handleInvoiceTracksClose} />
+            <InvoiceTracksModal invoiceId={selectedInvoiceId} onClose={() => setSelectedInvoiceId(null)} />
         </>
     );
 };

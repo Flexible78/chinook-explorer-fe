@@ -10,7 +10,7 @@ interface Props {
 
 const InvoiceTracksModal = ({ invoiceId, onClose }: Props) => {
     const { data: tracks = [], isPending, error } = useQuery<InvoiceTrack[]>({
-        queryKey: ["invoices", invoiceId, "tracks"],
+        queryKey: ["invoiceTracks", invoiceId],
         queryFn: () => fetchInvoiceTracks(invoiceId as number),
         enabled: invoiceId !== null,
     });

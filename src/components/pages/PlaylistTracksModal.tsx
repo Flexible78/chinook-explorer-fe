@@ -13,7 +13,7 @@ interface Props {
 const PlaylistTracksModal = ({ playlist, onClose }: Props) => {
     const playlistId = playlist?.id;
     const { data: tracks = [], isPending, error } = useQuery<Track[]>({
-        queryKey: ["playlists", playlistId, "tracks"],
+        queryKey: ["playlistTracks", playlistId],
         queryFn: () => fetchPlaylistTracks(playlistId as number),
         enabled: playlistId !== undefined,
     });
