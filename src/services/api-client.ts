@@ -1,4 +1,3 @@
-// src/services/api-client.ts
 import axios, { AxiosError } from "axios";
 import { useAuthStore } from "../state-management/auth-store.js";
 
