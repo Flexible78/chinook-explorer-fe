@@ -95,7 +95,11 @@ const CustomerInvoicesModal = ({ customerId, onClose }: Props) => {
                 </Dialog.Positioner>
             </Dialog.Root>
 
-            <InvoiceTracksModal invoiceId={selectedInvoiceId} onClose={() => setSelectedInvoiceId(null)} />
+            <InvoiceTracksModal
+                customerId={customerId}
+                invoiceId={selectedInvoiceId}
+                onClose={() => setSelectedInvoiceId(null)}
+            />
         </>
     );
 };

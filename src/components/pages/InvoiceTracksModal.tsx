@@ -4,20 +4,21 @@ import TracksModal from "../ui/TracksModal.js";
 import { getInvoiceTrackRowKey, invoiceTrackColumns } from "../ui/trackTableColumns.js";
 
 interface Props {
+    customerId: number | null;
     invoiceId: number | null;
     onClose: () => void;
 }
 
-const InvoiceTracksModal = ({ invoiceId, onClose }: Props) => {
+const InvoiceTracksModal = ({ customerId, invoiceId, onClose }: Props) => {
     const { data: tracks = [], isPending, error } = useQuery<InvoiceTrack[]>({
-        queryKey: ["invoiceTracks", invoiceId],
-        queryFn: () => fetchInvoiceTracks(invoiceId as number),
-        enabled: invoiceId !== null,
+        queryKey: ["invoiceTracks", customerId, invoiceId],
+        queryFn: () => fetchInvoiceTracks(customerId as number, invoiceId as number),
+        enabled: customerId !== null && invoiceId !== null,
     });
 
     return (
         <TracksModal<InvoiceTrack>
-            isOpen={invoiceId !== null}
+            isOpen={customerId !== null && invoiceId !== null}
             onClose={onClose}
             title="🎶 Invoice Tracks"
             tracks={tracks}

@@ -44,6 +44,10 @@ export interface InvoiceTrack extends Track {
     unitPrice: number;
 }
 
+interface RawInvoiceTrack extends Track {
+    unitPrice: number | string;
+}
+
 // Load invoices for a given customer.
 export const fetchCustomerInvoices = async (customerId: number): Promise<Invoice[]> => {
     const response = await apiClient.get<RawInvoice[]>(`/customers/${customerId}/invoices`);
@@ -55,8 +59,8 @@ export const fetchCustomerInvoices = async (customerId: number): Promise<Invoice
 };
 
 // Load tracks for a given invoice.
-export const fetchInvoiceTracks = async (invoiceId: number): Promise<InvoiceTrack[]> => {
-    const response = await apiClient.get<Array<InvoiceTrack & { unitPrice: number | string }>>(`/invoices/${invoiceId}/tracks`);
+export const fetchInvoiceTracks = async (customerId: number, invoiceId: number): Promise<InvoiceTrack[]> => {
+    const response = await apiClient.get<RawInvoiceTrack[]>(`/customers/${customerId}/invoices/${invoiceId}/tracks`);
 
     return response.data.map((track) => ({
         ...track,
