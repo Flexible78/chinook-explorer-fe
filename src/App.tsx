@@ -1,4 +1,3 @@
-// src/App.tsx
 import { Routes, Route, Navigate } from 'react-router-dom';
 import LoginPage from './components/pages/LoginPage.js';
 import AlbumsPage from './components/pages/AlbumsPage.js';
