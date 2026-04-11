@@ -15,10 +15,10 @@ export interface Track {
     trackName: string;
     genreName: string;
     mediaTypeName: string;
-    composer?: string;
+    composer?: string | null;
     milliseconds: number;
     bytes: number;
-    unitPrice: number;
+    unitPrice: number | string;
 }
 
 export const fetchTracks = async (albumId: number): Promise<Track[]> => {

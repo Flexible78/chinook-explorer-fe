@@ -74,8 +74,8 @@ export const standardTrackColumns: DataTableColumn<Track>[] = [
     {
         key: "unitPrice",
         header: "Price",
-        render: (track) => `$${track.unitPrice}`,
-        sortValue: (track) => track.unitPrice,
+        render: (track) => `$${Number(track.unitPrice).toFixed(2)}`,
+        sortValue: (track) => Number(track.unitPrice),
         headerProps: { textAlign: "right" },
         cellProps: { textAlign: "right", color: "green.400" },
     },
