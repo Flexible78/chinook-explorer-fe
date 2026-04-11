@@ -1,9 +1,5 @@
-// src/components/pages/PlaylistTracksModal.tsx
-import { useQuery } from "@tanstack/react-query";
-import type { Track } from "../../services/albums-service.js";
 import { fetchPlaylistTracks, type Playlist } from "../../services/playlists-service.js";
-import TracksModal from "../ui/TracksModal.js";
-import { getTrackRowKey, standardTrackColumns } from "../ui/trackTableColumns.js";
+import TrackCollectionModal from "./TrackCollectionModal.js";
 
 interface Props {
     playlist: Playlist | null;
@@ -11,27 +7,15 @@ interface Props {
 }
 
 const PlaylistTracksModal = ({ playlist, onClose }: Props) => {
-    const playlistId = playlist?.id;
-    const { data: tracks = [], isPending, error } = useQuery<Track[]>({
-        queryKey: ["playlistTracks", playlistId],
-        queryFn: () => fetchPlaylistTracks(playlistId as number),
-        enabled: playlistId !== undefined,
-    });
-
     return (
-        <TracksModal
-            isOpen={playlist !== null}
+        <TrackCollectionModal<Playlist>
+            entity={playlist}
             onClose={onClose}
-            title={playlist ? `Playlist: ${playlist.name}` : "Playlist Tracks"}
-            tracks={tracks}
-            loading={isPending}
-            columns={standardTrackColumns}
-            getRowKey={getTrackRowKey}
-            spinnerColor="purple.500"
-            errorMessage={error ? "Failed to load playlist tracks." : null}
-            tableProps={{ size: "sm", variant: "line" }}
-            contentProps={{ bg: "gray.900", border: "1px solid", borderColor: "purple.500" }}
-            titleProps={{ color: "purple.300" }}
+            queryKeyBase="playlistTracks"
+            queryFn={fetchPlaylistTracks}
+            fallbackTitle="Playlist Tracks"
+            makeTitle={(selectedPlaylist) => `Playlist: ${selectedPlaylist.name}`}
+            errorMessage="Failed to load playlist tracks."
             pageSize={10}
         />
     );

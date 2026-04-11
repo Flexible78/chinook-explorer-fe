@@ -19,14 +19,20 @@ export const standardTrackColumns: DataTableColumn<Track>[] = [
         key: "index",
         header: "#",
         render: (_track, index) => index + 1,
-        cellProps: { width: "10%" },
+        stickyLeft: "0px",
+        stickyBg: "gray.900",
+        headerProps: { width: "52px", minW: "52px", maxW: "52px" },
+        cellProps: { width: "52px", minW: "52px", maxW: "52px" },
     },
     {
         key: "trackName",
         header: "Track",
         render: (track) => track.trackName,
         sortValue: (track) => track.trackName,
-        cellProps: { fontWeight: "medium" },
+        stickyLeft: "52px",
+        stickyBg: "gray.900",
+        headerProps: { minW: "210px" },
+        cellProps: { fontWeight: "medium", minW: "210px" },
     },
     {
         key: "composer",
@@ -99,13 +105,15 @@ export const invoiceTrackColumns: DataTableColumn<InvoiceTrack>[] = [
     {
         key: "unitPrice",
         header: "Price",
-        render: (track) => `$${track.unitPrice}`,
-        sortValue: (track) => track.unitPrice,
+        render: (track) => (track.unitPrice !== undefined ? `$${track.unitPrice}` : ""),
+        sortValue: (track) => track.unitPrice || 0,
         headerProps: { textAlign: "right" },
         cellProps: { textAlign: "right", color: "green.400" },
     },
 ];
 
-export const getTrackRowKey = (track: Track, index: number) => `${track.trackName}-${track.genreName}-${index}`;
+export const getTrackRowKey = (track: Track, index: number) =>
+    `${track.trackName}-${track.genreName}-${index}`;
 
-export const getInvoiceTrackRowKey = (track: InvoiceTrack, index: number) => `${track.trackName}-${track.unitPrice}-${index}`;
+export const getInvoiceTrackRowKey = (track: InvoiceTrack, index: number) =>
+    `${track.trackName}-${track.unitPrice}-${index}`;

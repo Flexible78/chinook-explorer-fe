@@ -11,6 +11,8 @@ export interface DataTableColumn<T> {
     sortValue?: (row: T) => SortValue;
     headerProps?: ComponentProps<typeof Table.ColumnHeader>;
     cellProps?: ComponentProps<typeof Table.Cell>;
+    stickyLeft?: string;
+    stickyBg?: string;
 }
 
 interface DataTableProps<T> {
@@ -109,11 +111,26 @@ const DataTable = <T,>({
                 cursor={onRowClick ? "pointer" : undefined}
                 onClick={handleRowClick}
             >
-                {columns.map((column) => (
-                    <Table.Cell key={`${rowKey}-${column.key}`} {...column.cellProps}>
-                        {column.render(row, absoluteIndex)}
-                    </Table.Cell>
-                ))}
+                {columns.map((column) => {
+                    const stickyCellProps = column.stickyLeft
+                        ? {
+                            position: "sticky" as const,
+                            left: column.stickyLeft,
+                            zIndex: 1,
+                            bg: column.stickyBg ?? "gray.900",
+                        }
+                        : {};
+
+                    return (
+                        <Table.Cell
+                            key={`${rowKey}-${column.key}`}
+                            {...stickyCellProps}
+                            {...column.cellProps}
+                        >
+                            {column.render(row, absoluteIndex)}
+                        </Table.Cell>
+                    );
+                })}
             </Table.Row>
         );
     };
@@ -155,17 +172,29 @@ const DataTable = <T,>({
             <Table.Root variant="outline" stickyHeader interactive {...tableProps}>
                 <Table.Header>
                     <Table.Row bg="bg.muted">
-                        {columns.map((column) => (
-                            <Table.ColumnHeader
-                                key={column.key}
-                                cursor={column.sortValue ? "pointer" : undefined}
-                                onClick={column.sortValue ? () => handleSort(column) : undefined}
-                                {...column.headerProps}
-                            >
-                                {column.header}
-                                {renderSortIndicator(column.key)}
-                            </Table.ColumnHeader>
-                        ))}
+                        {columns.map((column) => {
+                            const stickyHeaderProps = column.stickyLeft
+                                ? {
+                                    position: "sticky" as const,
+                                    left: column.stickyLeft,
+                                    zIndex: 2,
+                                    bg: column.stickyBg ?? "gray.900",
+                                }
+                                : {};
+
+                            return (
+                                <Table.ColumnHeader
+                                    key={column.key}
+                                    cursor={column.sortValue ? "pointer" : undefined}
+                                    onClick={column.sortValue ? () => handleSort(column) : undefined}
+                                    {...stickyHeaderProps}
+                                    {...column.headerProps}
+                                >
+                                    {column.header}
+                                    {renderSortIndicator(column.key)}
+                                </Table.ColumnHeader>
+                            );
+                        })}
                     </Table.Row>
                 </Table.Header>
                 <Table.Body>

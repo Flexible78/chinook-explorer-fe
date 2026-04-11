@@ -1,4 +1,4 @@
-import { Button, Center, Dialog, Spinner, Table, Text } from "@chakra-ui/react";
+import { Button, Center, Dialog, Spinner, Table, Text, Box } from "@chakra-ui/react";
 import type { ComponentProps } from "react";
 import DataTable, { type DataTableColumn } from "./DataTable.js";
 
@@ -10,7 +10,7 @@ interface TracksModalProps<T> {
     loading: boolean;
     columns: DataTableColumn<T>[];
     getRowKey: (track: T, index: number) => string | number | null | undefined;
-    spinnerColor: string;
+    spinnerColor?: string;
     errorMessage?: string | null;
     tableProps?: ComponentProps<typeof Table.Root>;
     contentProps?: ComponentProps<typeof Dialog.Content>;
@@ -19,20 +19,20 @@ interface TracksModalProps<T> {
 }
 
 const TracksModal = <T,>({
-    isOpen,
-    onClose,
-    title,
-    tracks,
-    loading,
-    columns,
-    getRowKey,
-    spinnerColor,
-    errorMessage,
-    tableProps,
-    contentProps,
-    titleProps,
-    pageSize,
-}: TracksModalProps<T>) => {
+                             isOpen,
+                             onClose,
+                             title,
+                             tracks,
+                             loading,
+                             columns,
+                             getRowKey,
+                             spinnerColor = "purple.500",
+                             errorMessage,
+                             tableProps,
+                             contentProps,
+                             titleProps,
+                             pageSize,
+                         }: TracksModalProps<T>) => {
     const handleDialogOpenChange = (details: { open: boolean }) => {
         if (!details.open) {
             onClose();
@@ -43,14 +43,21 @@ const TracksModal = <T,>({
         <Dialog.Root open={isOpen} onOpenChange={handleDialogOpenChange}>
             <Dialog.Backdrop />
             <Dialog.Positioner>
-                <Dialog.Content p="6" position="relative" {...contentProps}>
+                <Dialog.Content
+                    p="4"
+                    position="relative"
+                    bg="gray.900"
+                    border="1px solid"
+                    borderColor="purple.500"
+                    {...contentProps}
+                >
                     <Dialog.Header>
-                        <Dialog.Title fontSize="xl" pr="8" {...titleProps}>
+                        <Dialog.Title fontSize="xl" pr="8" color="purple.300" lineHeight="1.2" {...titleProps}>
                             {title}
                         </Dialog.Title>
                     </Dialog.Header>
 
-                    <Dialog.Body pb="4">
+                    <Dialog.Body pt="2" pb="2" px="0">
                         {loading && <Center py="10"><Spinner color={spinnerColor} /></Center>}
 
                         {!loading && errorMessage && (
@@ -60,13 +67,25 @@ const TracksModal = <T,>({
                         )}
 
                         {!loading && !errorMessage && (
-                            <DataTable
-                                data={tracks}
-                                columns={columns}
-                                getRowKey={getRowKey}
-                                tableProps={tableProps}
-                                pageSize={pageSize}
-                            />
+                            <Box overflowX="auto" maxW="100%">
+                                <DataTable
+                                    data={tracks}
+                                    columns={columns}
+                                    getRowKey={getRowKey}
+                                    tableProps={{
+                                        size: "sm",
+                                        variant: "line",
+                                        css: {
+                                            "& th, & td": {
+                                                px: "2.5",
+                                                py: "2",
+                                            },
+                                        },
+                                        ...tableProps,
+                                    }}
+                                    pageSize={pageSize}
+                                />
+                            </Box>
                         )}
                     </Dialog.Body>
 
